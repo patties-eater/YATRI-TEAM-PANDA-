@@ -9,4 +9,4 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
-}
+} from 'react-native';
