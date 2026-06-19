@@ -8,10 +8,10 @@ export const colors = {
   text: '#3A3A35',
   textMuted: '#8A8577',
   white: '#FFFFFF',
-};
+} as const;
 
 export const font = {
-  family: undefined,
+  family: undefined as string | undefined,
   sizes: {
     title: 30,
     tagline: 14,
@@ -20,13 +20,13 @@ export const font = {
     button: 16,
     small: 12,
   },
-};
+} as const;
 
 export const radius = {
   sm: 10,
   md: 16,
   lg: 24,
   pill: 999,
-};
+} as const;
 
-export const spacing = (n) => n * 4;
+export const spacing = (n: number): number => n * 4;

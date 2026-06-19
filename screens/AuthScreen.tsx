@@ -11,10 +11,12 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, font, radius } from '../themes';
+import { colors, font, radius } from '../theme';
+
+type AuthMode = 'login' | 'signup';
 
 export default function AuthScreen() {
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -163,3 +165,153 @@ export default function AuthScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  flex: { flex: 1 },
+  scroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+  },
+
+  brand: { alignItems: 'center', marginBottom: 24 },
+  logoCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  title: {
+    fontFamily: font.family,
+    fontSize: font.sizes.title,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  tagline: {
+    fontFamily: font.family,
+    fontSize: font.sizes.tagline,
+    color: colors.primary,
+    marginTop: 2,
+  },
+
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: colors.surface,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
+  },
+
+  toggle: {
+    flexDirection: 'row',
+    backgroundColor: colors.background,
+    borderRadius: radius.pill,
+    padding: 4,
+    marginBottom: 18,
+  },
+  toggleBtn: {
+    flex: 1,
+    paddingVertical: 9,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+  },
+  toggleBtnActive: {
+    backgroundColor: colors.card,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  toggleText: { fontFamily: font.family, fontSize: 14, color: colors.textMuted, fontWeight: '600' },
+  toggleTextActive: { color: colors.text, fontWeight: '700' },
+
+  field: { marginBottom: 14 },
+  label: {
+    fontFamily: font.family,
+    fontSize: font.sizes.label,
+    color: colors.primary,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.surface,
+    borderRadius: radius.md,
+    paddingHorizontal: 12,
+    height: 50,
+  },
+  input: {
+    flex: 1,
+    marginLeft: 8,
+    fontFamily: font.family,
+    fontSize: font.sizes.body,
+    color: colors.text,
+  },
+
+  forgot: { alignSelf: 'flex-end', marginBottom: 16, marginTop: -2 },
+  forgotText: { fontFamily: font.family, fontSize: 13, color: colors.secondary, fontWeight: '600' },
+
+  primaryBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.pill,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  primaryBtnText: {
+    fontFamily: font.family,
+    color: colors.white,
+    fontSize: font.sizes.button,
+    fontWeight: '700',
+  },
+
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
+  divider: { flex: 1, height: 1, backgroundColor: colors.surface },
+  dividerText: {
+    fontFamily: font.family,
+    marginHorizontal: 12,
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+
+  socialRow: { flexDirection: 'row', gap: 12 },
+  socialBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 50,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.surface,
+    backgroundColor: colors.card,
+  },
+  socialText: { fontFamily: font.family, fontSize: 15, color: colors.text, fontWeight: '600' },
+
+  footer: {
+    fontFamily: font.family,
+    textAlign: 'center',
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 24,
+    lineHeight: 18,
+    paddingHorizontal: 8,
+  },
+  footerLink: { color: colors.primary, fontWeight: '600' },
+});
