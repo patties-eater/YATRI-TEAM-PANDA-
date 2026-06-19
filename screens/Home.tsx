@@ -316,8 +316,10 @@ const styles = StyleSheet.create({
   navItemActive: {
     alignItems: "center",
     backgroundColor: "#DDE8D5",
-    padding: 10,
-    borderRadius: 12,
+    justifyContent: "center",
+    height:52,
+    width:52,
+    borderRadius:26,
   },
 
   navText: {
