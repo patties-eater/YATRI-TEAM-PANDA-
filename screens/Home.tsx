@@ -22,7 +22,7 @@ export default function HomeScreen() {
           <Ionicons name="menu" size={24} color="#555" />
         </TouchableOpacity>
 
-        <Text style={styles.logo}>Sathi</Text>
+        <Text style={styles.logo}>Yatri</Text>
 
         <Image
           source={{ uri: "https://i.pravatar.cc/150" }}
