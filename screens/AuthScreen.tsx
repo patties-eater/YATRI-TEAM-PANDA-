@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  Animated,
+  Easing,
+  LayoutAnimation,
+  UIManager,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, font, radius } from '../theme';
@@ -18,16 +22,50 @@ import { useNotification } from '../components/Notification';
 
 type AuthMode = 'login' | 'signup';
 
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 export default function AuthScreen() {
   const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [trackW, setTrackW] = useState(0);
 
   const { notify } = useNotification();
 
   const isSignup = mode === 'signup';
+
+  // 0 = login, 1 = sign up — drives the sliding pill.
+  const slide = useRef(new Animated.Value(0)).current;
+
+  const switchMode = (next: AuthMode) => {
+    if (next === mode) return;
+    LayoutAnimation.configureNext({
+      duration: 260,
+      create: { type: 'easeInEaseOut', property: 'opacity' },
+      update: { type: 'easeInEaseOut' },
+      delete: { type: 'easeInEaseOut', property: 'opacity' },
+    });
+    setMode(next);
+    Animated.spring(slide, {
+      toValue: next === 'signup' ? 1 : 0,
+      useNativeDriver: true,
+      bounciness: 6,
+      speed: 16,
+    }).start();
+  };
+
+  const pillWidth = trackW > 0 ? (trackW - 8) / 2 : 0;
+  const pillTranslate = slide.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, pillWidth],
+  });
 
   const handleSubmit = () => {
     if (!email.trim() || !password.trim() || (isSignup && !name.trim())) {
@@ -75,10 +113,21 @@ export default function AuthScreen() {
           </View>
 
           <View style={styles.card}>
-            <View style={styles.toggle}>
+            <View
+              style={styles.toggle}
+              onLayout={(e) => setTrackW(e.nativeEvent.layout.width)}
+            >
+              {pillWidth > 0 && (
+                <Animated.View
+                  style={[
+                    styles.togglePill,
+                    { width: pillWidth, transform: [{ translateX: pillTranslate }] },
+                  ]}
+                />
+              )}
               <TouchableOpacity
-                style={[styles.toggleBtn, !isSignup && styles.toggleBtnActive]}
-                onPress={() => setMode('login')}
+                style={styles.toggleBtn}
+                onPress={() => switchMode('login')}
                 activeOpacity={0.8}
               >
                 <Text style={[styles.toggleText, !isSignup && styles.toggleTextActive]}>
@@ -86,8 +135,8 @@ export default function AuthScreen() {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.toggleBtn, isSignup && styles.toggleBtnActive]}
-                onPress={() => setMode('signup')}
+                style={styles.toggleBtn}
+                onPress={() => switchMode('signup')}
                 activeOpacity={0.8}
               >
                 <Text style={[styles.toggleText, isSignup && styles.toggleTextActive]}>
@@ -245,19 +294,25 @@ const styles = StyleSheet.create({
     padding: 4,
     marginBottom: 22,
   },
-  toggleBtn: {
-    flex: 1,
-    paddingVertical: 9,
+  togglePill: {
+    position: 'absolute',
+    top: 4,
+    bottom: 4,
+    left: 4,
     borderRadius: radius.pill,
-    alignItems: 'center',
-  },
-  toggleBtnActive: {
     backgroundColor: colors.card,
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    zIndex: 0,
+  },
+  toggleBtn: {
+    flex: 1,
+    paddingVertical: 9,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    zIndex: 1,
   },
   toggleText: { fontFamily: font.family, fontSize: 14, color: colors.textMuted, fontWeight: '600' },
   toggleTextActive: { color: colors.text, fontWeight: '700' },
