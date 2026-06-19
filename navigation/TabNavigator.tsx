@@ -3,18 +3,18 @@ import { Platform, StyleSheet, View, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
-import HomeScreen        from '../screens/Home';
-import TrailDetailScreen from '../screens/TrailDetailScreen';
-import ActiveTrekScreen  from '../screens/ActiveTrekScreen';
-import SOSScreen         from '../screens/SOSScreen';
+import HomeScreen    from '../screens/Home';
+import DetailsScreen from '../screens/DetailsScreen';
+import MapScreen     from '../screens/MapScreen';
+import SOSScreen     from '../screens/SOSScreen';
 
 import { colors, radius } from '../theme';
 
 export type TabParamList = {
-  Home:        undefined;
-  TrailDetail: undefined;
-  ActiveTrek:  undefined;
-  SOS:         undefined;
+  Home:    undefined;
+  Details: undefined;
+  Map:     undefined;
+  SOS:     undefined;
 };
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -25,10 +25,10 @@ const TAB_CONFIG: Record<
   keyof TabParamList,
   { label: string; active: IoniconName; inactive: IoniconName }
 > = {
-  Home:        { label: 'Home',         active: 'compass',         inactive: 'compass-outline' },
-  TrailDetail: { label: 'Trail Detail', active: 'map',             inactive: 'map-outline' },
-  ActiveTrek:  { label: 'Active Trek',  active: 'walk',            inactive: 'walk-outline' },
-  SOS:         { label: 'SOS',          active: 'warning',         inactive: 'warning-outline' },
+  Home:    { label: 'Home',    active: 'home',              inactive: 'home-outline' },
+  Details: { label: 'Details', active: 'information-circle', inactive: 'information-circle-outline' },
+  Map:     { label: 'Map',     active: 'map',               inactive: 'map-outline' },
+  SOS:     { label: 'SOS',     active: 'warning',           inactive: 'warning-outline' },
 };
 
 export default function TabNavigator() {
@@ -54,20 +54,17 @@ export default function TabNavigator() {
             </View>
           ),
           tabBarLabel: ({ focused, color }) => (
-            <Text
-              style={[styles.label, { color }, focused && styles.labelActive]}
-              numberOfLines={1}
-            >
+            <Text style={[styles.label, { color }, focused && styles.labelActive]}>
               {cfg.label}
             </Text>
           ),
         };
       }}
     >
-      <Tab.Screen name="Home"        component={HomeScreen} />
-      <Tab.Screen name="TrailDetail" component={TrailDetailScreen} />
-      <Tab.Screen name="ActiveTrek"  component={ActiveTrekScreen} />
-      <Tab.Screen name="SOS"         component={SOSScreen} />
+      <Tab.Screen name="Home"    component={HomeScreen} />
+      <Tab.Screen name="Details" component={DetailsScreen} />
+      <Tab.Screen name="Map"     component={MapScreen} />
+      <Tab.Screen name="SOS"     component={SOSScreen} />
     </Tab.Navigator>
   );
 }
