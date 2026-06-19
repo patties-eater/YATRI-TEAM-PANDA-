@@ -12,6 +12,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, font, radius } from '../theme';
+import GoogleLogo from '../components/GoogleLogo';
+import YatriLogo from '../components/YatriLogo';
+import { useNotification } from '../components/Notification';
 
 type AuthMode = 'login' | 'signup';
 
@@ -22,10 +25,34 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  const { notify } = useNotification();
+
   const isSignup = mode === 'signup';
 
   const handleSubmit = () => {
-    console.log({ mode, name, email, password });
+    if (!email.trim() || !password.trim() || (isSignup && !name.trim())) {
+      notify({
+        type: 'error',
+        title: 'Missing details',
+        message: 'Please fill in all fields to continue.',
+      });
+      return;
+    }
+    notify({
+      type: 'success',
+      title: isSignup ? `Welcome aboard${name ? ', ' + name.trim() : ''}!` : 'Welcome back!',
+      message: isSignup
+        ? 'Your journey with Yatri begins now.'
+        : 'Signed in successfully.',
+    });
+  };
+
+  const handleSocial = (provider: string) => {
+    notify({
+      type: 'info',
+      title: `Continue with ${provider}`,
+      message: `${provider} sign-in isn't connected yet.`,
+    });
   };
 
   return (
@@ -41,7 +68,7 @@ export default function AuthScreen() {
         >
           <View style={styles.brand}>
             <View style={styles.logoCircle}>
-              <Ionicons name="leaf" size={30} color={colors.white} />
+              <YatriLogo size={34} color={colors.white} />
             </View>
             <Text style={styles.title}>Yatri</Text>
             <Text style={styles.tagline}>Your companion through the valley</Text>
@@ -144,11 +171,19 @@ export default function AuthScreen() {
             </View>
 
             <View style={styles.socialRow}>
-              <TouchableOpacity style={styles.socialBtn} activeOpacity={0.85}>
-                <Ionicons name="logo-google" size={18} color="#EA4335" />
+              <TouchableOpacity
+                style={styles.socialBtn}
+                activeOpacity={0.85}
+                onPress={() => handleSocial('Google')}
+              >
+                <GoogleLogo size={18} />
                 <Text style={styles.socialText}>Google</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.socialBtn} activeOpacity={0.85}>
+              <TouchableOpacity
+                style={styles.socialBtn}
+                activeOpacity={0.85}
+                onPress={() => handleSocial('Apple')}
+              >
                 <Ionicons name="logo-apple" size={20} color={colors.text} />
                 <Text style={styles.socialText}>Apple</Text>
               </TouchableOpacity>
@@ -172,11 +207,11 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingHorizontal: 20,
+    paddingVertical: 28,
   },
 
-  brand: { alignItems: 'center', marginBottom: 24 },
+  brand: { alignItems: 'center', marginBottom: 28 },
   logoCircle: {
     width: 64,
     height: 64,
