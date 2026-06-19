@@ -9,114 +9,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { colors, radius, font } from '../theme';
-
-type Cuisine = {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  tags: string[];
-  accent: string;
-  emoji: string;
-};
-
-const CUISINES: Cuisine[] = [
-  {
-    id: '1',
-    name: 'Momo',
-    description: 'Steamed or fried dumplings filled with spiced minced meat or vegetables.',
-    category: 'Street Food',
-    tags: ['Spicy', 'Popular'],
-    accent: '#E07A5F',
-    emoji: '🥟',
-  },
-  {
-    id: '2',
-    name: 'Dal Bhat',
-    description: 'The national dish — lentil soup served with steamed rice, vegetables and pickles.',
-    category: 'Main Course',
-    tags: ['Vegetarian', 'Traditional'],
-    accent: '#F2CC8F',
-    emoji: '🍛',
-  },
-  {
-    id: '3',
-    name: 'Sel Roti',
-    description: 'Traditional homemade ring-shaped rice bread, crispy outside and soft inside.',
-    category: 'Snack',
-    tags: ['Sweet', 'Festive'],
-    accent: '#C4813A',
-    emoji: '🍩',
-  },
-  {
-    id: '4',
-    name: 'Thukpa',
-    description: 'Hearty noodle soup loaded with vegetables or meat, perfect for cold days.',
-    category: 'Soup',
-    tags: ['Warm', 'Filling'],
-    accent: '#81B29A',
-    emoji: '🍜',
-  },
-  {
-    id: '5',
-    name: 'Chatamari',
-    description: 'Newari rice crepe topped with minced meat, egg and spices — the Nepali pizza.',
-    category: 'Street Food',
-    tags: ['Savory', 'Newari'],
-    accent: '#3D405B',
-    emoji: '🫓',
-  },
-  {
-    id: '6',
-    name: 'Yomari',
-    description: 'Sweet steamed dumplings made of rice flour with a chaku filling inside.',
-    category: 'Dessert',
-    tags: ['Sweet', 'Newari'],
-    accent: '#9C6B4E',
-    emoji: '🍡',
-  },
-  {
-    id: '7',
-    name: 'Bara',
-    description: 'Savory lentil patties, pan-fried and often topped with egg or minced meat.',
-    category: 'Snack',
-    tags: ['Savory', 'Newari'],
-    accent: '#6B7F66',
-    emoji: '🫔',
-  },
-  {
-    id: '8',
-    name: 'Gundruk',
-    description: 'Fermented leafy green vegetable — a tangy Nepali superfood side dish.',
-    category: 'Side Dish',
-    tags: ['Fermented', 'Traditional'],
-    accent: '#5C7A4E',
-    emoji: '🥬',
-  },
-  {
-    id: '9',
-    name: 'Kwati',
-    description: 'Mixed bean soup with nine types of sprouted beans, rich in protein.',
-    category: 'Soup',
-    tags: ['Protein', 'Festival'],
-    accent: '#7B5EA7',
-    emoji: '🫘',
-  },
-  {
-    id: '10',
-    name: 'Aloo Tama',
-    description: 'Tangy curry made from bamboo shoots and potatoes — a Nepali comfort classic.',
-    category: 'Curry',
-    tags: ['Tangy', 'Vegetarian'],
-    accent: '#D4A853',
-    emoji: '🥘',
-  },
-];
+import CUISINES, { type Cuisine } from '../cuisines';
 
 const CATEGORIES = ['All', 'Street Food', 'Main Course', 'Snack', 'Soup', 'Dessert', 'Curry', 'Side Dish'];
 
 export default function DetailsScreen() {
+  const navigation = useNavigation<any>();
   const [search,   setSearch]   = useState('');
   const [category, setCategory] = useState('All');
 
@@ -126,6 +26,10 @@ export default function DetailsScreen() {
                         c.description.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
+
+  function handlePress(item: Cuisine) {
+    navigation.navigate('Map', { cuisineId: item.id });
+  }
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -187,7 +91,11 @@ export default function DetailsScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.card} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.82}
+            onPress={() => handlePress(item)}
+          >
             {/* Emoji tile */}
             <View style={[styles.emojiBox, { backgroundColor: item.accent + '22' }]}>
               <Text style={styles.emoji}>{item.emoji}</Text>
@@ -208,10 +116,14 @@ export default function DetailsScreen() {
                     <Text style={styles.tagText}>{tag}</Text>
                   </View>
                 ))}
+                <View style={styles.locHint}>
+                  <Ionicons name="location-outline" size={11} color={colors.textMuted} />
+                  <Text style={styles.locText}>{item.locations.length} spots</Text>
+                </View>
               </View>
             </View>
 
-            <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+            <Ionicons name="map-outline" size={18} color={colors.primary} />
           </TouchableOpacity>
         )}
       />
@@ -222,21 +134,9 @@ export default function DetailsScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
 
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 6,
-    paddingBottom: 12,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
+  header: { paddingHorizontal: 20, paddingTop: 6, paddingBottom: 12 },
+  title:    { fontSize: 26, fontWeight: '800', color: colors.text },
+  subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
 
   searchWrap: {
     flexDirection: 'row',
@@ -250,17 +150,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.surface,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: font.sizes.body,
-    color: colors.text,
-  },
+  searchInput: { flex: 1, fontSize: font.sizes.body, color: colors.text },
 
-  catRow: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 8,
-  },
+  catRow: { paddingHorizontal: 16, paddingVertical: 14, gap: 8 },
   catChip: {
     paddingHorizontal: 16,
     paddingVertical: 7,
@@ -269,34 +161,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.surface,
   },
-  catChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  catText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textMuted,
-  },
-  catTextActive: {
-    color: colors.white,
-  },
+  catChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  catText:       { fontSize: 13, fontWeight: '600', color: colors.textMuted },
+  catTextActive: { color: colors.white },
 
-  list: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  separator: {
-    height: 10,
-  },
-  empty: {
-    alignItems: 'center',
-    paddingTop: 60,
-  },
-  emptyText: {
-    color: colors.textMuted,
-    fontSize: 15,
-  },
+  list:      { paddingHorizontal: 16, paddingBottom: 24 },
+  separator: { height: 10 },
+  empty:     { alignItems: 'center', paddingTop: 60 },
+  emptyText: { color: colors.textMuted, fontSize: 15 },
 
   card: {
     flexDirection: 'row',
@@ -315,56 +187,28 @@ const styles = StyleSheet.create({
   },
 
   emojiBox: {
-    width: 58,
-    height: 58,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+    width: 58, height: 58, borderRadius: radius.sm,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   emoji: { fontSize: 28 },
 
-  info: { flex: 1, gap: 5 },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    flexShrink: 1,
-  },
-  catBadge: {
-    borderRadius: radius.pill,
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-  },
-  catBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  desc: {
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 18,
-  },
-  tagRow: {
-    flexDirection: 'row',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
+  info:    { flex: 1, gap: 5 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  name:    { fontSize: 16, fontWeight: '700', color: colors.text, flexShrink: 1 },
+
+  catBadge:     { borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 3 },
+  catBadgeText: { fontSize: 11, fontWeight: '700' },
+
+  desc: { fontSize: 13, color: colors.textMuted, lineHeight: 18 },
+
+  tagRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', alignItems: 'center' },
   tag: {
     backgroundColor: colors.surface + '88',
     borderRadius: radius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 8, paddingVertical: 2,
   },
-  tagText: {
-    fontSize: 11,
-    color: colors.textMuted,
-    fontWeight: '600',
-  },
+  tagText: { fontSize: 11, color: colors.textMuted, fontWeight: '600' },
+
+  locHint: { flexDirection: 'row', alignItems: 'center', gap: 2, marginLeft: 2 },
+  locText:  { fontSize: 11, color: colors.textMuted },
 });
