@@ -235,24 +235,15 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: 22,
-    borderWidth: 1,
-    borderColor: colors.surface,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 3,
+    width: '100%',
   },
 
   toggle: {
     flexDirection: 'row',
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
     borderRadius: radius.pill,
     padding: 4,
-    marginBottom: 18,
+    marginBottom: 22,
   },
   toggleBtn: {
     flex: 1,
