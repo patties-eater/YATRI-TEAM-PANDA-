@@ -105,7 +105,10 @@ const MINI_MAP_HTML = `<!DOCTYPE html>
     boxZoom:false,keyboard:false,tap:false})
     .setView([${PLACES[0].lat},${PLACES[0].lng}],15);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
+    maxZoom:19,
+    attribution:'&copy; OpenStreetMap &copy; CARTO'
+  }).addTo(map);
 
   var markers=${ALL_MARKERS};
   markers.forEach(function(m){
