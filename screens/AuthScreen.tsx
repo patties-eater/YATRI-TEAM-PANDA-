@@ -19,6 +19,7 @@ import { colors, font, radius } from '../theme';
 import GoogleLogo from '../components/GoogleLogo';
 import YatriLogo from '../components/YatriLogo';
 import { useNotification } from '../components/Notification';
+import ForgotPasswordSheet from '../components/ForgotPasswordSheet';
 
 type AuthMode = 'login' | 'signup';
 
@@ -36,6 +37,7 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [trackW, setTrackW] = useState(0);
+  const [forgotVisible, setForgotVisible] = useState(false);
 
   const { notify } = useNotification();
 
@@ -202,7 +204,11 @@ export default function AuthScreen() {
             </View>
 
             {!isSignup && (
-              <TouchableOpacity style={styles.forgot} hitSlop={8}>
+              <TouchableOpacity
+                style={styles.forgot}
+                hitSlop={8}
+                onPress={() => setForgotVisible(true)}
+              >
                 <Text style={styles.forgotText}>Forgot Password?</Text>
               </TouchableOpacity>
             )}
@@ -246,6 +252,12 @@ export default function AuthScreen() {
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <ForgotPasswordSheet
+        visible={forgotVisible}
+        onClose={() => setForgotVisible(false)}
+        defaultEmail={email}
+      />
     </SafeAreaView>
   );
 }
