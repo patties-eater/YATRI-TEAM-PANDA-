@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function HomeScreen() {
+export default function ActiveTrekScreen() {
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.center}>
@@ -12,7 +12,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F5F2EC' },
+  root: { flex: 1, backgroundColor: '#1A2332' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  text: { fontSize: 24, fontWeight: '700', color: '#3A3A35' },
+  text: { fontSize: 24, fontWeight: '700', color: '#FFFFFF' },
 });

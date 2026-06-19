@@ -36,18 +36,8 @@ const QUICK_REPLIES = [
   'Local festivals',
 ];
 
-type TabKey = 'explore' | 'plan' | 'lens' | 'safety';
-
-const TABS: { key: TabKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { key: 'explore', label: 'Explore', icon: 'compass-outline' },
-  { key: 'plan', label: 'Plan', icon: 'clipboard-outline' },
-  { key: 'lens', label: 'Lens', icon: 'scan-outline' },
-  { key: 'safety', label: 'Safety', icon: 'shield-checkmark-outline' },
-];
-
 export default function Plan() {
   const [message, setMessage] = useState('');
-  const [activeTab, setActiveTab] = useState<TabKey>('plan');
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -146,29 +136,6 @@ export default function Plan() {
         </View>
       </KeyboardAvoidingView>
 
-      {/* Bottom tab bar */}
-      <View style={styles.tabBar}>
-        {TABS.map((t) => {
-          const active = t.key === activeTab;
-          return (
-            <TouchableOpacity
-              key={t.key}
-              style={styles.tabItem}
-              activeOpacity={0.7}
-              onPress={() => setActiveTab(t.key)}
-            >
-              <View style={[styles.tabIconWrap, active && styles.tabIconWrapActive]}>
-                <Ionicons
-                  name={t.icon}
-                  size={22}
-                  color={active ? colors.primary : colors.textMuted}
-                />
-              </View>
-              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
     </SafeAreaView>
   );
 }
@@ -336,35 +303,4 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: { opacity: 0.5 },
 
-  tabBar: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: colors.surface,
-    backgroundColor: colors.background,
-    paddingTop: 8,
-    paddingBottom: 10,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    // Remove the rectangular focus outline the browser adds on web after a tap.
-    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null),
-  },
-  tabIconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  tabIconWrapActive: { backgroundColor: colors.secondary },
-  tabLabel: {
-    fontFamily: font.family,
-    fontSize: 12,
-    color: colors.text,
-    fontWeight: '600',
-  },
-  tabLabelActive: { color: colors.primary, fontWeight: '700' },
 });
