@@ -16,10 +16,10 @@ import * as Location from 'expo-location';
 import { colors, radius } from '../theme';
 
 const EMERGENCY_SERVICES = [
-  { id: 'police',         label: 'Nepal Police',     number: '100',  icon: 'shield-checkmark' as const, color: '#3B6FE2' },
-  { id: 'ambulance',      label: 'Ambulance',         number: '102',  icon: 'medkit'           as const, color: '#E23B3B' },
-  { id: 'fire',           label: 'Fire Brigade',      number: '101',  icon: 'flame'            as const, color: '#E2873B' },
-  { id: 'tourist_police', label: 'Tourist Police',    number: '1144', icon: 'people'           as const, color: '#778873' },
+  { id: 'police', label: 'Nepal Police', number: '100', icon: 'shield-checkmark' as const, color: '#3B6FE2' },
+  { id: 'ambulance', label: 'Ambulance', number: '102', icon: 'medkit' as const, color: '#E23B3B' },
+  { id: 'fire', label: 'Fire Brigade', number: '101', icon: 'flame' as const, color: '#E2873B' },
+  { id: 'tourist_police', label: 'Tourist Police', number: '1144', icon: 'people' as const, color: '#778873' },
 ];
 
 export default function SOSScreen() {
@@ -33,10 +33,10 @@ export default function SOSScreen() {
       Animated.parallel([
         Animated.sequence([
           Animated.timing(pulse, { toValue: 1.08, duration: 800, useNativeDriver: true }),
-          Animated.timing(pulse, { toValue: 1,    duration: 800, useNativeDriver: true }),
+          Animated.timing(pulse, { toValue: 1, duration: 800, useNativeDriver: true }),
         ]),
         Animated.sequence([
-          Animated.timing(ringOpacity, { toValue: 0,   duration: 900, useNativeDriver: true }),
+          Animated.timing(ringOpacity, { toValue: 0, duration: 900, useNativeDriver: true }),
           Animated.timing(ringOpacity, { toValue: 0.6, duration: 900, useNativeDriver: true }),
         ]),
       ])
@@ -102,7 +102,7 @@ export default function SOSScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        
+
         <View style={styles.header}>
           <Text style={styles.title}>Emergency SOS</Text>
           <Text style={styles.subtitle}>Stay calm — help is available 24/7</Text>
@@ -170,8 +170,8 @@ export default function SOSScreen() {
         </View>
 
         <Text style={[styles.disclaimer, { color: '#222', opacity: 1 }]}>
-  Powered by JOJO
-</Text>
+          Powered By JOJO
+        </Text>
 
       </ScrollView>
     </SafeAreaView>
@@ -179,11 +179,11 @@ export default function SOSScreen() {
 }
 
 const styles = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1, backgroundColor: colors.background },
   scroll: { paddingBottom: 40 },
 
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14 },
-  title:    { fontSize: 26, fontWeight: '800', color: colors.text, letterSpacing: -0.5 },
+  title: { fontSize: 26, fontWeight: '800', color: colors.text, letterSpacing: -0.5 },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
 
   sosWrapper: { alignItems: 'center', paddingVertical: 36, position: 'relative' },
@@ -211,9 +211,9 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   sosLabel: { fontSize: 22, fontWeight: '900', color: '#fff', letterSpacing: 2 },
-  sosMeta:  { marginTop: 18, fontSize: 13, color: colors.textMuted, fontWeight: '500' },
+  sosMeta: { marginTop: 18, fontSize: 13, color: colors.textMuted, fontWeight: '500' },
 
-  section:      { paddingHorizontal: 16, marginBottom: 20 },
+  section: { paddingHorizontal: 16, marginBottom: 20 },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 12 },
 
   servicesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  serviceLabel:  { fontSize: 13, fontWeight: '700', color: colors.text, textAlign: 'center' },
+  serviceLabel: { fontSize: 13, fontWeight: '700', color: colors.text, textAlign: 'center' },
 
   numberBadge: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 4 },
 

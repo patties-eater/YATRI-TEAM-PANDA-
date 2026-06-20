@@ -371,7 +371,15 @@ export default function MapScreen() {
       </TouchableOpacity>
 
       {selected && !navigating && (
-        <Animated.View style={[styles.panel, { bottom: insets.bottom + 16, transform: [{ translateY: panelY }] }]}>
+  <Animated.View
+    style={[
+      styles.panel,
+      {
+        bottom: insets.bottom + 90,
+        transform: [{ translateY: panelY }],
+      },
+    ]}
+  >
           <View style={styles.panelHandle} />
           <View style={styles.panelRow}>
             <Image source={dishImageSource(selected.cuisine.id, selected.cuisine.image)} style={styles.panelImg} />
