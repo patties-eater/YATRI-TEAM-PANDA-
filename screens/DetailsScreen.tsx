@@ -316,7 +316,7 @@ export default function DetailsScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <FlatList
-        key={`${category}-${numColumns}`}
+        key={`cols-${numColumns}`}
         data={filtered}
         keyExtractor={item => item.id}
         numColumns={numColumns}

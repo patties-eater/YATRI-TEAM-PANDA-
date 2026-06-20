@@ -7,9 +7,7 @@ import {
   ScrollView,
   TextInput,
   Animated,
-  Easing,
   PanResponder,
-  Dimensions,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,8 +17,6 @@ import { useNavigation } from '@react-navigation/native';
 import { colors, radius } from '../theme';
 import { useCuisines } from '../data/cuisines';
 import type { Cuisine } from '../cuisines';
-
-const SCREEN_W = Dimensions.get('window').width;
 
 // ─── Places ──────────────────────────────────────────────────────────────────
 type Place = {
@@ -69,21 +65,13 @@ function PlaceCard({
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) =>
         g.dx > 10 && Math.abs(g.dx) > Math.abs(g.dy) * 1.2,
-      onPanResponderMove: (_, g) => tx.setValue(Math.max(0, g.dx)),
+      onPanResponderMove: (_, g) => tx.setValue(Math.max(0, Math.min(g.dx, 130))),
       onPanResponderRelease: (_, g) => {
-        if (g.dx > 120) {
-          Animated.timing(tx, {
-            toValue: SCREEN_W,
-            duration: 240,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
-          }).start(() => {
-            tx.setValue(0);
-            onOpenMap();
-          });
-        } else {
-          Animated.spring(tx, { toValue: 0, useNativeDriver: true, bounciness: 6 }).start();
-        }
+        // Always spring the card back; navigate when swiped far enough. We do
+        // NOT slide it off-screen — navigation re-renders Home and would
+        // interrupt the reset, leaving the card stuck/invisible.
+        Animated.spring(tx, { toValue: 0, useNativeDriver: true, bounciness: 6 }).start();
+        if (g.dx > 100) onOpenMap();
       },
       onPanResponderTerminate: () =>
         Animated.spring(tx, { toValue: 0, useNativeDriver: true }).start(),
