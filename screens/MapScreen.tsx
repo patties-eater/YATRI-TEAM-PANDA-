@@ -20,6 +20,19 @@ const CATEGORIES = [
 // Used as the route start point when the user's GPS isn't available.
 const FALLBACK_ORIGIN = { latitude: 27.7172, longitude: 85.324 };
 
+// Straight-line distance in km (for the routing fallback estimate).
+function haversineKm(a: LatLng, b: LatLng) {
+  const R = 6371;
+  const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
+  const dLng = ((b.longitude - a.longitude) * Math.PI) / 180;
+  const la1 = (a.latitude * Math.PI) / 180;
+  const la2 = (b.latitude * Math.PI) / 180;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(la1) * Math.cos(la2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
 type Selected = { cuisine: Cuisine; location: CuisineLocation };
 type LatLng   = { latitude: number; longitude: number };
 
@@ -65,9 +78,10 @@ const MAP_HTML = `<!DOCTYPE html>
     });
   };
   window.flyTo = function(lat,lng,z){ map.flyTo([lat,lng], z||15, { duration:0.8 }); };
+  window.follow = function(lat,lng,z){ map.setView([lat,lng], z||17, { animate:true, duration:0.5 }); };
   window.showUser = function(lat,lng){
     if(userDot){ map.removeLayer(userDot); }
-    userDot = L.circleMarker([lat,lng], { radius:7, weight:3, color:'#fff', fillColor:'#2D6A9F', fillOpacity:1 }).addTo(map);
+    userDot = L.circleMarker([lat,lng], { radius:8, weight:3, color:'#fff', fillColor:'#2D6A9F', fillOpacity:1 }).addTo(map);
   };
   window.drawRoute = function(coords){
     if(routeLine){ map.removeLayer(routeLine); }
@@ -93,10 +107,17 @@ export default function MapScreen() {
   const [ready,     setReady]     = useState(false);
   const [filterCat, setFilterCat] = useState('All');
   const [isolating, setIsolating] = useState(false);
-  const [userCoord, setUserCoord] = useState<LatLng | null>(null);
-  const [selected,  setSelected]  = useState<Selected | null>(null);
-  const [routing,   setRouting]   = useState(false);
-  const panelY = useRef(new Animated.Value(320)).current;
+  const [userCoord,  setUserCoord]  = useState<LatLng | null>(null);
+  const [selected,   setSelected]   = useState<Selected | null>(null);
+  const [routing,    setRouting]    = useState(false);
+  const [hasRoute,   setHasRoute]   = useState(false);
+  const [navigating, setNavigating] = useState(false);
+  const [trip,       setTrip]       = useState<{ km: string; min: number } | null>(null);
+  const panelY  = useRef(new Animated.Value(320)).current;
+  const watchRef = useRef<Location.LocationSubscription | null>(null);
+
+  // Stop watching location if the screen unmounts mid-navigation.
+  useEffect(() => () => { watchRef.current?.remove(); }, []);
 
   const run = (js: string) => webRef.current?.injectJavaScript(js + ';true;');
 
@@ -171,23 +192,28 @@ export default function MapScreen() {
     if (msg.type === 'ready') {
       setReady(true);
     } else if (msg.type === 'marker') {
+      if (navigating) return; // don't switch dishes while navigating
       const cuisine = CUISINES.find(c => c.id === msg.cuisineId);
       const location = cuisine?.locations.find(l => l.id === msg.locId);
       if (cuisine && location) openPanel({ cuisine, location });
     } else if (msg.type === 'mapPress') {
-      if (selected) closePanel();
+      if (selected && !navigating) closePanel();
     }
   }
 
   // ── Panel helpers ───────────────────────────────────────────────────────────
   function openPanel(item: Selected) {
     run('window.clearRoute()');
+    setHasRoute(false);
+    setTrip(null);
     setSelected(item);
     Animated.spring(panelY, { toValue: 0, useNativeDriver: true, speed: 18, bounciness: 4 }).start();
   }
 
   function closePanel() {
     run('window.clearRoute()');
+    setHasRoute(false);
+    setTrip(null);
     Animated.spring(panelY, { toValue: 320, useNativeDriver: true, speed: 25, bounciness: 0 })
       .start(() => setSelected(null));
   }
@@ -219,6 +245,7 @@ export default function MapScreen() {
       const origin = gps ?? FALLBACK_ORIGIN;
 
       let coords: number[][] | null = null;
+      let meta: { distance: number; duration: number } | null = null;
       try {
         const res = await fetch(
           `https://router.project-osrm.org/route/v1/driving/` +
@@ -231,6 +258,7 @@ export default function MapScreen() {
           coords = data.routes[0].geometry.coordinates.map(
             ([lng, lat]: number[]) => [lat, lng],
           );
+          meta = { distance: data.routes[0].distance, duration: data.routes[0].duration };
         }
       } catch {
         // network/server error — fall through to straight line
@@ -244,7 +272,19 @@ export default function MapScreen() {
         ];
       }
 
+      // Trip estimate (km + minutes).
+      if (meta) {
+        setTrip({
+          km: (meta.distance / 1000).toFixed(1),
+          min: Math.max(1, Math.round(meta.duration / 60)),
+        });
+      } else {
+        const d = haversineKm(origin, dest);
+        setTrip({ km: d.toFixed(1), min: Math.max(1, Math.round((d / 25) * 60)) });
+      }
+
       run(`window.drawRoute(${JSON.stringify(coords)})`);
+      setHasRoute(true);
 
       if (!gps) {
         Alert.alert(
@@ -255,6 +295,37 @@ export default function MapScreen() {
     } finally {
       setRouting(false);
     }
+  }
+
+  // ── Live navigation (Google-Maps style follow) ──────────────────────────────
+  async function startNavigation() {
+    const origin = await ensureOrigin();
+    if (!origin) {
+      Alert.alert('Location needed', 'Enable location access to start navigation.');
+      return;
+    }
+    setNavigating(true);
+    run(`window.showUser(${origin.latitude},${origin.longitude});window.follow(${origin.latitude},${origin.longitude},17)`);
+    try {
+      watchRef.current = await Location.watchPositionAsync(
+        { accuracy: Location.Accuracy.High, distanceInterval: 8, timeInterval: 2000 },
+        pos => {
+          const c = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+          setUserCoord(c);
+          run(`window.showUser(${c.latitude},${c.longitude});window.follow(${c.latitude},${c.longitude},17)`);
+        },
+      );
+    } catch {
+      Alert.alert('Navigation error', 'Could not track your location.');
+      setNavigating(false);
+    }
+  }
+
+  function stopNavigation() {
+    watchRef.current?.remove();
+    watchRef.current = null;
+    setNavigating(false);
+    closePanel();
   }
 
   return (
@@ -311,8 +382,8 @@ export default function MapScreen() {
         <Ionicons name="locate" size={22} color="#2D6A9F" />
       </TouchableOpacity>
 
-      {/* Bottom detail panel */}
-      {selected && (
+      {/* Bottom detail panel (hidden while navigating) */}
+      {selected && !navigating && (
         <Animated.View style={[styles.panel, { bottom: insets.bottom + 16, transform: [{ translateY: panelY }] }]}>
           <View style={styles.panelHandle} />
           <View style={styles.panelRow}>
@@ -328,27 +399,69 @@ export default function MapScreen() {
               <Text style={styles.panelDesc} numberOfLines={2}>{selected.cuisine.description}</Text>
             </View>
           </View>
+
+          {hasRoute && trip && (
+            <View style={styles.tripRow}>
+              <Ionicons name="car-outline" size={15} color={colors.text} />
+              <Text style={styles.tripText}>{trip.km} km</Text>
+              <Text style={styles.tripDot}>•</Text>
+              <Ionicons name="time-outline" size={15} color={colors.text} />
+              <Text style={styles.tripText}>{trip.min} min</Text>
+            </View>
+          )}
+
           <View style={styles.panelActions}>
-            <TouchableOpacity
-              style={[styles.dirBtn, routing && styles.dirBtnDisabled]}
-              onPress={getDirections}
-              activeOpacity={0.85}
-              disabled={routing}
-            >
-              {routing ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Ionicons name="navigate" size={15} color="#fff" />
-              )}
-              <Text style={styles.dirBtnText}>
-                {routing ? 'Finding route…' : 'Get Directions'}
-              </Text>
-            </TouchableOpacity>
+            {!hasRoute ? (
+              <TouchableOpacity
+                style={[styles.dirBtn, routing && styles.dirBtnDisabled]}
+                onPress={getDirections}
+                activeOpacity={0.85}
+                disabled={routing}
+              >
+                {routing ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Ionicons name="navigate" size={15} color="#fff" />
+                )}
+                <Text style={styles.dirBtnText}>
+                  {routing ? 'Finding route…' : 'Get Directions'}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.startBtn}
+                onPress={startNavigation}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="navigate-circle" size={18} color="#fff" />
+                <Text style={styles.dirBtnText}>Start</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity style={styles.closeBtn} onPress={closePanel} activeOpacity={0.7}>
               <Ionicons name="close" size={18} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
         </Animated.View>
+      )}
+
+      {/* Live navigation bar */}
+      {navigating && selected && (
+        <View style={[styles.navBar, { bottom: insets.bottom + 16 }]}>
+          <View style={styles.navIconBox}>
+            <Ionicons name="navigate" size={20} color="#fff" />
+          </View>
+          <View style={styles.navInfo}>
+            <Text style={styles.navTo} numberOfLines={1}>
+              To {selected.cuisine.name} · {selected.location.area}
+            </Text>
+            {trip && (
+              <Text style={styles.navEta}>{trip.km} km • {trip.min} min</Text>
+            )}
+          </View>
+          <TouchableOpacity style={styles.endBtn} onPress={stopNavigation} activeOpacity={0.85}>
+            <Text style={styles.endBtnText}>End</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -444,6 +557,54 @@ const styles = StyleSheet.create({
   },
   dirBtnDisabled: { opacity: 0.7 },
   dirBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+
+  startBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 7, backgroundColor: '#1E9E5A',
+    borderRadius: radius.md, paddingVertical: 11,
+  },
+
+  tripRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: colors.surface + '55',
+    borderRadius: radius.pill,
+    paddingHorizontal: 12, paddingVertical: 7,
+    alignSelf: 'flex-start',
+  },
+  tripText: { fontSize: 13, fontWeight: '700', color: colors.text },
+  tripDot:  { fontSize: 13, color: colors.textMuted, marginHorizontal: 2 },
+
+  // Live navigation bar
+  navBar: {
+    position: 'absolute',
+    left: 16, right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.surface,
+    shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 16,
+    shadowOffset: { width: 0, height: -4 }, elevation: 8,
+  },
+  navIconBox: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: '#1E9E5A',
+    alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
+  },
+  navInfo: { flex: 1 },
+  navTo:  { fontSize: 14, fontWeight: '700', color: colors.text },
+  navEta: { fontSize: 12, fontWeight: '600', color: colors.textMuted, marginTop: 2 },
+  endBtn: {
+    backgroundColor: '#E23B3B',
+    borderRadius: radius.pill,
+    paddingHorizontal: 16, paddingVertical: 9,
+    flexShrink: 0,
+  },
+  endBtnText: { color: '#fff', fontSize: 13, fontWeight: '800' },
   closeBtn: {
     width: 44, height: 44,
     borderRadius: radius.sm,
