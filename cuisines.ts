@@ -98,7 +98,7 @@ const CUISINES: Cuisine[] = [
     tags: ['Sweet', 'Newari'],
     accent: '#9C6B4E',
     emoji: '🍡',
-    image: 'https://images.unsplash.com/photo-1631730486784-74757d38e27f?auto=format&fit=crop&w=400&q=80',
+    image: 'https://images.unsplash.com/photo-1606471191009-63994c53433b?auto=format&fit=crop&w=400&q=80',
     locations: [
       { id: '6a', latitude: 27.6688, longitude: 85.3193, area: 'Patan' },
       { id: '6b', latitude: 27.6733, longitude: 85.4308, area: 'Bhaktapur' },

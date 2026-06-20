@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,12 @@ import {
   StyleSheet,
   TextInput,
   Image,
+  Animated,
+  Easing,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,28 +21,192 @@ import { useNavigation } from '@react-navigation/native';
 import { colors, radius, font } from '../theme';
 import CUISINES from '../cuisines';
 
-type Category = { label: string; emoji: string };
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
-const CATEGORIES: Category[] = [
-  { label: 'All',         emoji: '🍽' },
-  { label: 'Street Food', emoji: '🥡' },
-  { label: 'Main Course', emoji: '🍛' },
-  { label: 'Snack',       emoji: '🍿' },
-  { label: 'Soup',        emoji: '🍲' },
-  { label: 'Dessert',     emoji: '🍮' },
-  { label: 'Curry',       emoji: '🫕' },
-  { label: 'Side Dish',   emoji: '🥗' },
+const CATEGORIES: string[] = [
+  'All',
+  'Street Food',
+  'Main Course',
+  'Snack',
+  'Soup',
+  'Dessert',
+  'Curry',
+  'Side Dish',
 ];
+
+/* responsive layout constants */
+const H_PAD = 16; // list horizontal padding (each side)
+const COL_GAP = 12; // gap between grid columns
+const MAX_CONTENT_WIDTH = 720; // keep content readable on large screens
+
+function getColumns(width: number) {
+  if (width >= 920) return 3;
+  if (width >= 600) return 2;
+  return 1;
+}
+
+function smoothNext() {
+  LayoutAnimation.configureNext(
+    LayoutAnimation.create(
+      260,
+      LayoutAnimation.Types.easeInEaseOut,
+      LayoutAnimation.Properties.opacity,
+    ),
+  );
+}
+
+/* ---- Animated dish card (entrance + press) ---- */
+function DishCard({
+  item,
+  index,
+  onPress,
+  cardWidth,
+}: {
+  item: any;
+  index: number;
+  onPress: () => void;
+  cardWidth: number;
+}) {
+  const entrance = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.timing(entrance, {
+      toValue: 1,
+      duration: 420,
+      delay: Math.min(index, 9) * 65,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const pressIn = () =>
+    Animated.spring(scale, {
+      toValue: 0.97,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 0,
+    }).start();
+
+  const pressOut = () =>
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 30,
+      bounciness: 6,
+    }).start();
+
+  return (
+    <Animated.View
+      style={{
+        width: cardWidth,
+        opacity: entrance,
+        transform: [
+          {
+            translateY: entrance.interpolate({
+              inputRange: [0, 1],
+              outputRange: [22, 0],
+            }),
+          },
+          { scale },
+        ],
+      }}
+    >
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={1}
+        onPress={onPress}
+        onPressIn={pressIn}
+        onPressOut={pressOut}
+      >
+        {/* Dish image */}
+        <View style={styles.imgWrap}>
+          <Image
+            source={{ uri: item.image }}
+            style={styles.img}
+            resizeMode="cover"
+          />
+        </View>
+
+        {/* Info */}
+        <View style={styles.info}>
+          <View style={styles.nameRow}>
+            <Text style={styles.name} numberOfLines={1}>
+              {item.name}
+            </Text>
+            <View
+              style={[styles.catBadge, { backgroundColor: item.accent + '22' }]}
+            >
+              <Text style={[styles.catBadgeText, { color: item.accent }]}>
+                {item.category}
+              </Text>
+            </View>
+          </View>
+
+          <Text style={styles.desc} numberOfLines={2}>
+            {item.description}
+          </Text>
+
+          <View style={styles.metaRow}>
+            {item.tags.map((tag: string) => (
+              <View key={tag} style={styles.tag}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
+            <View style={styles.locHint}>
+              <Ionicons
+                name="location-outline"
+                size={11}
+                color={colors.textMuted}
+              />
+              <Text style={styles.locText}>{item.locations.length} spots</Text>
+            </View>
+          </View>
+        </View>
+
+        <Ionicons name="chevron-forward" size={15} color={colors.surface} />
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
 
 export default function DetailsScreen() {
   const navigation = useNavigation<any>();
-  const [search,   setSearch]   = useState('');
+  const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
 
+  /* responsive sizing */
+  const { width } = useWindowDimensions();
+  const contentWidth = Math.min(width, MAX_CONTENT_WIDTH);
+  const numColumns = getColumns(width);
+  const available = contentWidth - H_PAD * 2;
+  const cardWidth =
+    numColumns === 1
+      ? available
+      : (available - COL_GAP * (numColumns - 1)) / numColumns;
+  const fontScale = Math.min(Math.max(width / 380, 1), 1.25);
+
+  /* header intro animation */
+  const intro = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(intro, {
+      toValue: 1,
+      duration: 520,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   const filtered = CUISINES.filter(c => {
-    const matchCat    = category === 'All' || c.category === category;
-    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
-                        c.description.toLowerCase().includes(search.toLowerCase());
+    const matchCat = category === 'All' || c.category === category;
+    const matchSearch =
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.description.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
 
@@ -45,12 +215,38 @@ export default function DetailsScreen() {
     return CUISINES.filter(c => c.category === label).length;
   }
 
+  function onSelectCategory(label: string) {
+    smoothNext();
+    setCategory(label);
+  }
+
+  function onChangeSearch(text: string) {
+    smoothNext();
+    setSearch(text);
+  }
+
   const ListHeader = (
-    <View>
+    <Animated.View
+      style={{
+        opacity: intro,
+        transform: [
+          {
+            translateY: intro.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-16, 0],
+            }),
+          },
+        ],
+      }}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Local Cuisine</Text>
-        <Text style={styles.subtitle}>Explore Nepal's finest dishes</Text>
+        <Text style={[styles.title, { fontSize: 28 * fontScale }]}>
+          Local Cuisine
+        </Text>
+        <Text style={[styles.subtitle, { fontSize: 13 * fontScale }]}>
+          Explore Nepal's finest dishes
+        </Text>
       </View>
 
       {/* Search */}
@@ -61,10 +257,10 @@ export default function DetailsScreen() {
           placeholder="Search dishes…"
           placeholderTextColor={colors.textMuted}
           value={search}
-          onChangeText={setSearch}
+          onChangeText={onChangeSearch}
         />
         {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
+          <TouchableOpacity onPress={() => onChangeSearch('')} hitSlop={8}>
             <Ionicons name="close-circle" size={16} color={colors.textMuted} />
           </TouchableOpacity>
         )}
@@ -76,25 +272,18 @@ export default function DetailsScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.catRow}
       >
-        {CATEGORIES.map(cat => {
-          const active = cat.label === category;
-          const count  = countFor(cat.label);
+        {CATEGORIES.map(label => {
+          const active = label === category;
           return (
             <TouchableOpacity
-              key={cat.label}
+              key={label}
               style={[styles.catChip, active && styles.catChipActive]}
-              onPress={() => setCategory(cat.label)}
+              onPress={() => onSelectCategory(label)}
               activeOpacity={0.75}
             >
-              <Text style={styles.catEmoji}>{cat.emoji}</Text>
               <Text style={[styles.catText, active && styles.catTextActive]}>
-                {cat.label}
+                {label}
               </Text>
-              <View style={[styles.catCount, active && styles.catCountActive]}>
-                <Text style={[styles.catCountText, active && styles.catCountTextActive]}>
-                  {count}
-                </Text>
-              </View>
             </TouchableOpacity>
           );
         })}
@@ -104,15 +293,23 @@ export default function DetailsScreen() {
       <View style={styles.resultsRow}>
         <Text style={styles.resultsText}>{filtered.length} dishes</Text>
       </View>
-    </View>
+    </Animated.View>
   );
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <FlatList
+        key={`${category}-${numColumns}`}
         data={filtered}
         keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
+        numColumns={numColumns}
+        columnWrapperStyle={
+          numColumns > 1 ? { gap: COL_GAP } : undefined
+        }
+        contentContainerStyle={[
+          styles.list,
+          { width: '100%', maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center' },
+        ]}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={ListHeader}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -120,52 +317,20 @@ export default function DetailsScreen() {
           <View style={styles.empty}>
             <Ionicons name="search-outline" size={40} color={colors.surface} />
             <Text style={styles.emptyTitle}>No dishes found</Text>
-            <Text style={styles.emptySubtitle}>Try a different search or category</Text>
+            <Text style={styles.emptySubtitle}>
+              Try a different search or category
+            </Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.82}
-            onPress={() => navigation.navigate('DishDetail', { cuisineId: item.id })}
-          >
-            {/* Dish image */}
-            <View style={styles.imgWrap}>
-              <Image
-                source={{ uri: item.image }}
-                style={styles.img}
-                resizeMode="cover"
-              />
-            </View>
-
-            {/* Info */}
-            <View style={styles.info}>
-              <View style={styles.nameRow}>
-                <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
-                <View style={[styles.catBadge, { backgroundColor: item.accent + '22' }]}>
-                  <Text style={[styles.catBadgeText, { color: item.accent }]}>
-                    {item.category}
-                  </Text>
-                </View>
-              </View>
-
-              <Text style={styles.desc} numberOfLines={2}>{item.description}</Text>
-
-              <View style={styles.metaRow}>
-                {item.tags.map(tag => (
-                  <View key={tag} style={styles.tag}>
-                    <Text style={styles.tagText}>{tag}</Text>
-                  </View>
-                ))}
-                <View style={styles.locHint}>
-                  <Ionicons name="location-outline" size={11} color={colors.textMuted} />
-                  <Text style={styles.locText}>{item.locations.length} spots</Text>
-                </View>
-              </View>
-            </View>
-
-            <Ionicons name="chevron-forward" size={15} color={colors.surface} />
-          </TouchableOpacity>
+        renderItem={({ item, index }) => (
+          <DishCard
+            item={item}
+            index={index}
+            cardWidth={cardWidth}
+            onPress={() =>
+              navigation.navigate('DishDetail', { cuisineId: item.id })
+            }
+          />
         )}
       />
     </SafeAreaView>
@@ -175,9 +340,14 @@ export default function DetailsScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
 
-  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14 },
-  title:    { fontSize: 26, fontWeight: '800', color: colors.text },
-  subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
+  header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 16 },
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: colors.text,
+    letterSpacing: -0.5,
+  },
+  subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
 
   searchWrap: {
     flexDirection: 'row',
@@ -185,26 +355,31 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     marginHorizontal: 16,
     borderRadius: radius.pill,
-    paddingHorizontal: 14,
-    height: 46,
-    gap: 8,
+    paddingHorizontal: 16,
+    height: 48,
+    gap: 10,
     borderWidth: 1,
     borderColor: colors.surface,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
   searchInput: { flex: 1, fontSize: font.sizes.body, color: colors.text },
 
   // Category chips
   catRow: {
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 16,
     gap: 8,
   },
   catChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    gap: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     borderRadius: radius.pill,
     backgroundColor: colors.card,
     borderWidth: 1,
@@ -214,11 +389,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  catEmoji: { fontSize: 14 },
   catText: {
     fontSize: 13,
     fontWeight: '600',
     color: colors.textMuted,
+    letterSpacing: 0.1,
   },
   catTextActive: { color: '#fff' },
   catCount: {
@@ -240,21 +415,26 @@ const styles = StyleSheet.create({
 
   resultsRow: {
     paddingHorizontal: 20,
-    paddingBottom: 10,
+    paddingBottom: 12,
   },
   resultsText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: colors.textMuted,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1.2,
   },
 
-  list:      { paddingHorizontal: 16, paddingBottom: 28 },
-  separator: { height: 10 },
+  list: { paddingHorizontal: 16, paddingBottom: 28 },
+  separator: { height: 12 },
 
   empty: { alignItems: 'center', paddingTop: 48, gap: 8 },
-  emptyTitle:    { fontSize: 15, fontWeight: '700', color: colors.text, marginTop: 4 },
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+    marginTop: 4,
+  },
   emptySubtitle: { fontSize: 13, color: colors.textMuted },
 
   card: {
@@ -262,45 +442,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.card,
     borderRadius: radius.md,
-    padding: 12,
-    gap: 12,
+    padding: 14,
+    gap: 14,
     borderWidth: 1,
     borderColor: colors.surface,
     shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
 
   imgWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: radius.sm,
+    width: 74,
+    height: 74,
+    borderRadius: radius.md,
     overflow: 'hidden',
     flexShrink: 0,
     backgroundColor: colors.surface,
   },
   img: { width: '100%', height: '100%' },
 
-  info:    { flex: 1, gap: 4 },
+  info: { flex: 1, gap: 5 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  name:    { flex: 1, fontSize: 15, fontWeight: '700', color: colors.text },
+  name: { flex: 1, fontSize: 15.5, fontWeight: '700', color: colors.text, letterSpacing: -0.2 },
 
-  catBadge:     { borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 3, flexShrink: 0 },
+  catBadge: {
+    borderRadius: radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    flexShrink: 0,
+  },
   catBadgeText: { fontSize: 10, fontWeight: '700' },
 
   desc: { fontSize: 12, color: colors.textMuted, lineHeight: 17 },
 
-  metaRow: { flexDirection: 'row', gap: 5, flexWrap: 'wrap', alignItems: 'center' },
+  metaRow: {
+    flexDirection: 'row',
+    gap: 5,
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
   tag: {
     backgroundColor: colors.surface + '99',
     borderRadius: radius.pill,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   tagText: { fontSize: 10, color: colors.textMuted, fontWeight: '600' },
 
   locHint: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  locText:  { fontSize: 10, color: colors.textMuted },
+  locText: { fontSize: 10, color: colors.textMuted },
 });
