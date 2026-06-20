@@ -10,10 +10,11 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, radius } from '../theme';
+import { colors, radius, gradients } from '../theme';
 import { getCuisine } from '../cuisines';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -171,13 +172,16 @@ export default function DishDetailScreen() {
 
       {/* View on Map CTA */}
       <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 16 }]}>
-        <TouchableOpacity
-          style={[styles.ctaBtn, { backgroundColor: dish.accent }]}
-          activeOpacity={0.85}
-          onPress={openOnMap}
-        >
-          <Ionicons name="map" size={18} color="#fff" />
-          <Text style={styles.ctaBtnText}>View on Map</Text>
+        <TouchableOpacity activeOpacity={0.9} onPress={openOnMap}>
+          <LinearGradient
+            colors={gradients.primary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.ctaBtn}
+          >
+            <Ionicons name="map" size={18} color="#fff" />
+            <Text style={styles.ctaBtnText}>View on Map</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </View>

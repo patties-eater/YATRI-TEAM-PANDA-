@@ -16,9 +16,10 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { colors, radius, font } from '../theme';
+import { colors, radius, font, gradients } from '../theme';
 import CUISINES from '../cuisines';
 
 if (
@@ -283,13 +284,26 @@ export default function DetailsScreen() {
           return (
             <TouchableOpacity
               key={label}
-              style={[styles.catChip, active && styles.catChipActive]}
+              style={styles.catChipWrap}
               onPress={() => onSelectCategory(label)}
-              activeOpacity={0.75}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.catText, active && styles.catTextActive]}>
-                {label}
-              </Text>
+              {active ? (
+                <LinearGradient
+                  colors={gradients.primary}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.catChip, styles.catChipActive]}
+                >
+                  <Text style={[styles.catText, styles.catTextActive]}>
+                    {label}
+                  </Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.catChip}>
+                  <Text style={styles.catText}>{label}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           );
         })}
@@ -380,6 +394,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 8,
   },
+  catChipWrap: {
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+  },
   catChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -392,8 +410,7 @@ const styles = StyleSheet.create({
     borderColor: colors.surface,
   },
   catChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    borderColor: 'transparent',
   },
   catText: {
     fontSize: 14.5,
