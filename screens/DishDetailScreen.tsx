@@ -35,16 +35,19 @@ export default function DishDetailScreen() {
     );
   }
 
-  function openOnMap() {
+  function openOnMap(lat?: number, lng?: number) {
     navigation.navigate('Tabs', {
       screen: 'Map',
-      params: { cuisineId: dish!.id },
+      params: {
+        cuisineId: dish!.id,
+        latitude: lat,
+        longitude: lng,
+      },
     });
   }
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      {/* Back button */}
       <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={20} color={colors.text} />
       </TouchableOpacity>
@@ -53,13 +56,13 @@ export default function DishDetailScreen() {
         
         {/* Hero */}
         <View style={styles.hero}>
-          <Image source={{ uri: dish.image }} style={styles.heroImg} resizeMode="cover" />
+          <Image source={{ uri: dish.image }} style={styles.heroImg} />
           <View style={[styles.emojiBadge, { backgroundColor: dish.accent }]}>
             <Text style={styles.emojiBadgeText}>{dish.emoji}</Text>
           </View>
         </View>
 
-        {/* Name + category */}
+        {/* Name */}
         <View style={styles.nameRow}>
           <Text style={styles.name}>{dish.name}</Text>
           <View style={[styles.catBadge, { backgroundColor: dish.accent + '22' }]}>
@@ -93,8 +96,12 @@ export default function DishDetailScreen() {
 
           <View style={styles.locationsCard}>
             {dish.locations.map((loc, i) => (
-              <View
+              
+              // ✅ CLICKABLE CARD
+              <TouchableOpacity
                 key={loc.id}
+                activeOpacity={0.7}
+                onPress={() => openOnMap(loc.latitude, loc.longitude)}
                 style={[
                   styles.locRow,
                   i < dish.locations.length - 1 && styles.locDivider,
@@ -105,23 +112,22 @@ export default function DishDetailScreen() {
                 </View>
 
                 <View style={styles.locInfo}>
-                  {/* ✅ ONLY CHANGE: enlarged text */}
                   <Text style={styles.locAreaLarge}>{loc.area}</Text>
                 </View>
 
                 <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
       </ScrollView>
 
-      {/* CTA */}
+      {/* View on Map (ALL LOCATIONS) */}
       <View style={styles.ctaBar}>
         <TouchableOpacity
           style={[styles.ctaBtn, { backgroundColor: dish.accent }]}
+          onPress={() => openOnMap()}
           activeOpacity={0.85}
-          onPress={openOnMap}
         >
           <Ionicons name="map" size={18} color="#fff" />
           <Text style={styles.ctaBtnText}>View on Map</Text>
@@ -156,7 +162,6 @@ const styles = StyleSheet.create({
     height: 220,
     borderRadius: radius.lg,
     overflow: 'hidden',
-    backgroundColor: colors.surface,
   },
   heroImg: { width: '100%', height: '100%' },
 
@@ -170,22 +175,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   emojiBadgeText: { fontSize: 24 },
 
   nameRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     marginBottom: 10,
   },
-  name: { fontSize: 28, fontWeight: '800', color: colors.text, flexShrink: 1 },
+
+  name: { fontSize: 28, fontWeight: '800', color: colors.text },
 
   catBadge: {
     borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 5,
   },
+
   catBadgeText: { fontSize: 13, fontWeight: '700' },
 
   tagRow: {
@@ -195,17 +202,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 20,
   },
+
   tag: {
     backgroundColor: colors.surface + '88',
     borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 5,
   },
-  tagText: { fontSize: 12, color: colors.textMuted, fontWeight: '600' },
+
+  tagText: { fontSize: 12, color: colors.textMuted },
 
   section: { paddingHorizontal: 16, marginBottom: 20 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 10 },
-  sectionCount: { fontSize: 13, fontWeight: '500', color: colors.textMuted },
+
+  sectionTitle: { fontSize: 15, fontWeight: '700' },
+
+  sectionCount: { fontSize: 13, color: colors.textMuted },
+
   description: { fontSize: 15, color: colors.textMuted, lineHeight: 24 },
 
   locationsCard: {
@@ -214,7 +226,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.surface,
     overflow: 'hidden',
-    elevation: 1,
   },
 
   locRow: {
@@ -239,14 +250,13 @@ const styles = StyleSheet.create({
 
   locInfo: { flex: 1 },
 
-  // ✅ ONLY CHANGE STYLE (bigger place text, not congested)
   locAreaLarge: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.text,
   },
 
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+
   notFoundText: { fontSize: 16, color: colors.textMuted },
 
   ctaBar: {
@@ -263,11 +273,10 @@ const styles = StyleSheet.create({
 
   ctaBtn: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    borderRadius: radius.md,
     paddingVertical: 15,
+    borderRadius: radius.md,
+    gap: 8,
   },
 
   ctaBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },

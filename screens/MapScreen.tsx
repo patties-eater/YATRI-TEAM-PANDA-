@@ -85,6 +85,8 @@ export default function MapScreen() {
   const webRef   = useRef<WebView>(null);
 
   const cuisineId = navRoute.params?.cuisineId;
+  const paramLat  = navRoute.params?.latitude;
+  const paramLng  = navRoute.params?.longitude;
   const [ready,     setReady]     = useState(false);
   const [filterCat, setFilterCat] = useState('All');
   const [isolating, setIsolating] = useState(false);
@@ -141,10 +143,20 @@ export default function MapScreen() {
     if (!ready || !cuisineId) return;
     setIsolating(true);
     const cuisine = CUISINES.find(c => c.id === cuisineId);
-    const loc = cuisine?.locations[0];
-    if (!cuisine || !loc) return;
+    if (!cuisine) return;
+
+    // If exact lat/lng were passed (from DishDetail location), prefer that location
+    let loc = cuisine.locations.find(l => (
+      paramLat !== undefined && paramLng !== undefined &&
+      l.latitude === paramLat && l.longitude === paramLng
+    ));
+
+    // Fallback to first location if no exact match
+    if (!loc) loc = cuisine.locations[0];
+
+    if (!loc) return;
     run(`window.flyTo(${loc.latitude},${loc.longitude},16)`);
-    const t = setTimeout(() => openPanel({ cuisine, location: loc }), 700);
+    const t = setTimeout(() => openPanel({ cuisine, location: loc! }), 700);
     return () => clearTimeout(t);
   }, [ready, cuisineId]);
 

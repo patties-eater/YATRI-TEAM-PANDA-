@@ -13,7 +13,7 @@ import { colors, radius } from '../theme';
 export type TabParamList = {
   Home:    undefined;
   Details: undefined;
-  Map:     { cuisineId?: string } | undefined;
+  Map:     { cuisineId?: string; latitude?: number; longitude?: number } | undefined;
   SOS:     undefined;
 };
 
