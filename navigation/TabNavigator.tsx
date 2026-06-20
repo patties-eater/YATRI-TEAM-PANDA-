@@ -44,19 +44,20 @@ export default function TabNavigator() {
           tabBarItemStyle: styles.item,
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textMuted,
+          tabBarShowLabel: false, // Keeps default text label disabled
+          tabBarIconStyle: styles.navIconContainer,
           tabBarIcon: ({ focused, color }) => (
-            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+            // FIXED: This wrapper remains a perfect circle even when focused
+            <View style={[styles.circleWrap, focused && styles.circleWrapActive]}>
               <Ionicons
                 name={focused ? cfg.active : cfg.inactive}
-                size={22}
+                size={18} // Sized perfectly to share vertical circle space
                 color={color}
               />
+              <Text style={[styles.label, { color }, focused && styles.labelActive]}>
+                {cfg.label}
+              </Text>
             </View>
-          ),
-          tabBarLabel: ({ focused, color }) => (
-            <Text style={[styles.label, { color }, focused && styles.labelActive]}>
-              {cfg.label}
-            </Text>
           ),
         };
       }}
@@ -71,12 +72,12 @@ export default function TabNavigator() {
 
 const styles = StyleSheet.create({
   bar: {
-    height: Platform.OS === 'ios' ? 84 : 68,
+    height: Platform.OS === 'ios' ? 92 : 78, // Slightly elevated to allow circles to sit comfortably
     backgroundColor: colors.background,
     borderTopWidth: 1,
     borderTopColor: colors.surface,
-    paddingTop: 6,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 10,
+    paddingTop: 4,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 6,
     elevation: 0,
     shadowOpacity: 0,
   },
@@ -84,19 +85,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: radius.pill,
+  navIconContainer: {
+    width: '100%',
+    height: '100%',
+  },
+  // CHANGED: Formatted as a tight, uniform perfect circle layout
+  circleWrap: {
+    width: 64, // Exact proportional symmetry
+    height: 64,
+    borderRadius: 32, // Perfect mathematical radius circle (64 / 2)
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 1, // Micro-spacing to bundle elements inside the frame
   },
-  iconWrapActive: {
-    backgroundColor: colors.secondary + '55',
+  circleWrapActive: {
+    backgroundColor: colors.secondary + '55', // Active circle background tint color
   },
   label: {
-    fontSize: 11,
+    fontSize: 9, // Tailored micro-font size so text stays well inside the borders
     fontWeight: '600',
+    textAlign: 'center',
   },
   labelActive: {
     fontWeight: '700',
