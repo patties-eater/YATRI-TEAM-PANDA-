@@ -36,11 +36,10 @@ export default function DishDetailScreen() {
   }
 
   function openOnMap() {
-    navigation.navigate('Tabs');
-    // Small delay lets the tab navigator mount before we switch tabs
-    setTimeout(() => {
-      (navigation as any).navigate('Map', { cuisineId: dish!.id });
-    }, 50);
+    navigation.navigate('Tabs', {
+      screen: 'Map',
+      params: { cuisineId: dish!.id },
+    });
   }
 
   return (

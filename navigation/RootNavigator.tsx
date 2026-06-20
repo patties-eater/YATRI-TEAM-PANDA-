@@ -1,9 +1,11 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { NavigatorScreenParams } from '@react-navigation/native';
 import TabNavigator from './TabNavigator';
 import DishDetailScreen from '../screens/DishDetailScreen';
+import type { TabParamList } from './TabNavigator';
 
 export type RootStackParamList = {
-  Tabs:       undefined;
+  Tabs:       NavigatorScreenParams<TabParamList> | undefined;
   DishDetail: { cuisineId: string };
 };
 
