@@ -170,7 +170,7 @@ export default function SOSScreen() {
         </View>
 
         <Text style={[styles.disclaimer, { color: '#222', opacity: 1 }]}>
-          Powered by JOJO
+          Powered By JOJO
         </Text>
 
       </ScrollView>
