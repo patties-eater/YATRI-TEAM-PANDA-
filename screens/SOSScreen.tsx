@@ -209,9 +209,9 @@ const styles = StyleSheet.create({
   root:   { flex: 1, backgroundColor: colors.background },
   scroll: { paddingBottom: 40 },
 
-  header: { paddingHorizontal: 20, paddingTop: 6, paddingBottom: 4 },
-  title:    { fontSize: 26, fontWeight: '800', color: colors.text },
-  subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14 },
+  title:    { fontSize: 26, fontWeight: '800', color: colors.text, letterSpacing: -0.5 },
+  subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
 
   // SOS button area
   sosWrapper: { alignItems: 'center', paddingVertical: 36, position: 'relative' },

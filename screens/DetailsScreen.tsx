@@ -198,7 +198,6 @@ export default function DetailsScreen() {
     numColumns === 1
       ? available
       : (available - COL_GAP * (numColumns - 1)) / numColumns;
-  const fontScale = Math.min(Math.max(width / 380, 1), 1.25);
 
   /* header intro animation */
   const intro = useRef(new Animated.Value(0)).current;
@@ -248,12 +247,8 @@ export default function DetailsScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { fontSize: 28 * fontScale }]}>
-          Local Cuisine
-        </Text>
-        <Text style={[styles.subtitle, { fontSize: 13 * fontScale }]}>
-          Explore Nepal's finest dishes
-        </Text>
+        <Text style={styles.title}>Local Cuisine</Text>
+        <Text style={styles.subtitle}>Explore Nepal's finest dishes</Text>
       </View>
 
       {/* Search */}
@@ -360,14 +355,14 @@ export default function DetailsScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
 
-  header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 16 },
+  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14 },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '800',
     color: colors.text,
     letterSpacing: -0.5,
   },
-  subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
+  subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
 
   searchWrap: {
     flexDirection: 'row',

@@ -214,8 +214,12 @@ export default function MapScreen() {
         )}
       />
 
-      {/* Category chips */}
-      <View style={[styles.filterBar, { top: insets.top + 8 }]}>
+      {/* Header + category chips */}
+      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Food Map</Text>
+          <Text style={styles.subtitle}>Discover dishes across Nepal</Text>
+        </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterContent}>
           {CATEGORIES.map(cat => {
             const active = cat === filterCat && !isolating;
@@ -287,12 +291,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
 
-  filterBar: {
+  topBar: {
     position: 'absolute',
-    left: 0, right: 0,
+    top: 0, left: 0, right: 0,
     zIndex: 10,
+    backgroundColor: colors.background,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surface,
   },
-  filterContent: { paddingHorizontal: 12, gap: 8 },
+  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
+  title:    { fontSize: 26, fontWeight: '800', color: colors.text, letterSpacing: -0.5 },
+  subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
+
+  filterContent: { paddingHorizontal: 16, gap: 8 },
   chip: {
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: radius.pill,

@@ -5,6 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  PanResponder,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
@@ -138,6 +140,10 @@ export default function HomeScreen() {
   const place    = PLACES[idx];
   const cuisines = cuisinesFor(place);
 
+  // Responsive map height — scales with the screen, clamped to sane bounds.
+  const { height } = useWindowDimensions();
+  const mapHeight = Math.round(Math.min(Math.max(height * 0.4, 240), 460));
+
   const run = (js: string) => webRef.current?.injectJavaScript(js + ';true;');
 
   // Draw all food markers + center on the first place once the map is ready.
@@ -154,10 +160,26 @@ export default function HomeScreen() {
   }
 
   function go(dir: 1 | -1) {
-    const next = (idx + dir + PLACES.length) % PLACES.length;
-    setIdx(next);
-    run(`window.flyTo(${PLACES[next].lat},${PLACES[next].lng})`);
+    setIdx(prev => {
+      const next = (prev + dir + PLACES.length) % PLACES.length;
+      run(`window.flyTo(${PLACES[next].lat},${PLACES[next].lng})`);
+      return next;
+    });
   }
+
+  // Swipe the card left / right to move between places.
+  const goRef = useRef(go);
+  goRef.current = go;
+  const pan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) =>
+        Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+      onPanResponderRelease: (_, g) => {
+        if (g.dx <= -40) goRef.current(1);
+        else if (g.dx >= 40) goRef.current(-1);
+      },
+    }),
+  ).current;
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -181,7 +203,7 @@ export default function HomeScreen() {
       <View style={styles.body}>
 
       {/* ── Mini map ── */}
-      <View style={styles.mapWrap}>
+      <View style={[styles.mapWrap, { height: mapHeight }]}>
         <WebView
           ref={webRef}
           source={{ html: MINI_MAP_HTML }}
@@ -205,8 +227,8 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ── Place card ── */}
-      <View style={styles.card}>
+      {/* ── Place card (swipe left / right to change place) ── */}
+      <View style={styles.card} {...pan.panHandlers}>
 
         {/* Place title row */}
         <View style={styles.placeRow}>
@@ -231,7 +253,6 @@ export default function HomeScreen() {
           {cuisines.length > 0
             ? cuisines.map(c => (
                 <View key={c.id} style={[styles.chip, { backgroundColor: c.accent + '1A' }]}>
-                  <Text style={styles.chipEmoji}>{c.emoji}</Text>
                   <Text style={[styles.chipLabel, { color: c.accent }]}>{c.name}</Text>
                 </View>
               ))
@@ -243,16 +264,15 @@ export default function HomeScreen() {
         {/* Divider */}
         <View style={styles.divider} />
 
-        {/* Prev / Next + CTA */}
+        {/* Page dots + CTA */}
         <View style={styles.bottomRow}>
-          <View style={styles.navGroup}>
-            <TouchableOpacity style={styles.navBtn} onPress={() => go(-1)} activeOpacity={0.7}>
-              <Ionicons name="chevron-back" size={18} color={colors.text} />
-            </TouchableOpacity>
-            <Text style={styles.navIndicator}>{idx + 1} / {PLACES.length}</Text>
-            <TouchableOpacity style={styles.navBtn} onPress={() => go(1)} activeOpacity={0.7}>
-              <Ionicons name="chevron-forward" size={18} color={colors.text} />
-            </TouchableOpacity>
+          <View style={styles.dotsGroup}>
+            {PLACES.map((_, i) => (
+              <View
+                key={i}
+                style={[styles.pageDot, i === idx && styles.pageDotActive]}
+              />
+            ))}
           </View>
 
           <TouchableOpacity
@@ -281,11 +301,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 6,
+    paddingTop: 8,
     paddingBottom: 14,
   },
-  title:    { fontSize: 26, fontWeight: '800', color: colors.text },
-  subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  title:    { fontSize: 26, fontWeight: '800', color: colors.text, letterSpacing: -0.5 },
+  subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
   searchBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.card,
@@ -300,8 +320,6 @@ const styles = StyleSheet.create({
 
   // Map
   mapWrap: {
-    flex: 1,
-    maxHeight: 420,
     marginHorizontal: 16,
     borderRadius: radius.lg,
     overflow: 'hidden',
@@ -309,14 +327,6 @@ const styles = StyleSheet.create({
     borderColor: colors.surface,
   },
   miniMap: { flex: 1 },
-  dot: {
-    width: 14, height: 14,
-    borderRadius: 7,
-    backgroundColor: '#fff',
-    borderWidth: 2.5,
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 }, elevation: 2,
-  },
   expandHint: {
     position: 'absolute',
     bottom: 10, right: 10,
@@ -349,7 +359,6 @@ const styles = StyleSheet.create({
   },
 
   placeRow:   { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  placeEmoji: { fontSize: 36 },
   placeMeta:  { flex: 1, gap: 5 },
   placeName:  { fontSize: 20, fontWeight: '800', color: colors.text },
   countPill: {
@@ -367,9 +376,8 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     borderRadius: radius.pill,
-    paddingHorizontal: 11, paddingVertical: 6,
+    paddingHorizontal: 12, paddingVertical: 7,
   },
-  chipEmoji: { fontSize: 15 },
   chipLabel: { fontSize: 12, fontWeight: '700' },
   noCuisine: { fontSize: 13, color: colors.textMuted, fontStyle: 'italic' },
 
@@ -380,14 +388,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  navGroup: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  navBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: colors.background,
-    borderWidth: 1, borderColor: colors.surface,
-    alignItems: 'center', justifyContent: 'center',
+  dotsGroup: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  pageDot: {
+    width: 7, height: 7, borderRadius: 4,
+    backgroundColor: colors.surface,
   },
-  navIndicator: { fontSize: 13, fontWeight: '700', color: colors.textMuted, minWidth: 36, textAlign: 'center' },
+  pageDotActive: {
+    width: 18,
+    backgroundColor: colors.primary,
+  },
 
   viewBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 7,
