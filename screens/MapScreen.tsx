@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   View, StyleSheet, ScrollView, TouchableOpacity,
-  Text, Image, Animated, ActivityIndicator,
+  Text, Image, Animated, ActivityIndicator, Alert,
 } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import * as Location from 'expo-location';
@@ -16,6 +16,9 @@ const CATEGORIES = [
   'All', 'Street Food', 'Main Course', 'Snack',
   'Soup', 'Dessert', 'Curry', 'Side Dish',
 ];
+
+// Used as the route start point when the user's GPS isn't available.
+const FALLBACK_ORIGIN = { latitude: 27.7172, longitude: 85.324 };
 
 type Selected = { cuisine: Cuisine; location: CuisineLocation };
 type LatLng   = { latitude: number; longitude: number };
@@ -92,6 +95,7 @@ export default function MapScreen() {
   const [isolating, setIsolating] = useState(false);
   const [userCoord, setUserCoord] = useState<LatLng | null>(null);
   const [selected,  setSelected]  = useState<Selected | null>(null);
+  const [routing,   setRouting]   = useState(false);
   const panelY = useRef(new Animated.Value(320)).current;
 
   const run = (js: string) => webRef.current?.injectJavaScript(js + ';true;');
@@ -188,24 +192,69 @@ export default function MapScreen() {
       .start(() => setSelected(null));
   }
 
-  // ── Directions via OSRM ─────────────────────────────────────────────────────
-  async function getDirections() {
-    if (!selected || !userCoord) return;
-    const { location } = selected;
+  // Get the user's location on demand (used as the route start point).
+  async function ensureOrigin(): Promise<LatLng | null> {
+    if (userCoord) return userCoord;
     try {
-      const res = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/` +
-        `${userCoord.longitude},${userCoord.latitude};` +
-        `${location.longitude},${location.latitude}` +
-        `?overview=full&geometries=geojson`,
-      );
-      const data = await res.json();
-      if (!data.routes?.[0]) return;
-      const coords = data.routes[0].geometry.coordinates.map(
-        ([lng, lat]: number[]) => [lat, lng],
-      );
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return null;
+      const pos = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const c = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+      setUserCoord(c);
+      return c;
+    } catch {
+      return null;
+    }
+  }
+
+  // ── Directions (shortest road route via OSRM, straight-line fallback) ────────
+  async function getDirections() {
+    if (!selected || routing) return;
+    const dest = selected.location;
+    setRouting(true);
+    try {
+      const gps = await ensureOrigin();
+      const origin = gps ?? FALLBACK_ORIGIN;
+
+      let coords: number[][] | null = null;
+      try {
+        const res = await fetch(
+          `https://router.project-osrm.org/route/v1/driving/` +
+          `${origin.longitude},${origin.latitude};` +
+          `${dest.longitude},${dest.latitude}` +
+          `?overview=full&geometries=geojson&alternatives=false`,
+        );
+        const data = await res.json();
+        if (data.routes?.[0]) {
+          coords = data.routes[0].geometry.coordinates.map(
+            ([lng, lat]: number[]) => [lat, lng],
+          );
+        }
+      } catch {
+        // network/server error — fall through to straight line
+      }
+
+      // Fallback: draw the shortest straight line if routing failed.
+      if (!coords || coords.length < 2) {
+        coords = [
+          [origin.latitude, origin.longitude],
+          [dest.latitude, dest.longitude],
+        ];
+      }
+
       run(`window.drawRoute(${JSON.stringify(coords)})`);
-    } catch {}
+
+      if (!gps) {
+        Alert.alert(
+          'Location unavailable',
+          'Showing the route from Kathmandu city centre. Enable location access to get directions from where you are.',
+        );
+      }
+    } finally {
+      setRouting(false);
+    }
   }
 
   return (
@@ -252,8 +301,10 @@ export default function MapScreen() {
       {/* Locate-me button */}
       <TouchableOpacity
         style={[styles.locateBtn, { bottom: insets.bottom + 24 }]}
-        onPress={() => {
-          if (userCoord) run(`window.flyTo(${userCoord.latitude},${userCoord.longitude},15)`);
+        onPress={async () => {
+          const c = await ensureOrigin();
+          if (c) run(`window.showUser(${c.latitude},${c.longitude});window.flyTo(${c.latitude},${c.longitude},15)`);
+          else Alert.alert('Location unavailable', 'Enable location access to center the map on your position.');
         }}
         activeOpacity={0.85}
       >
@@ -278,9 +329,20 @@ export default function MapScreen() {
             </View>
           </View>
           <View style={styles.panelActions}>
-            <TouchableOpacity style={styles.dirBtn} onPress={getDirections} activeOpacity={0.85}>
-              <Ionicons name="navigate" size={15} color="#fff" />
-              <Text style={styles.dirBtnText}>Get Directions</Text>
+            <TouchableOpacity
+              style={[styles.dirBtn, routing && styles.dirBtnDisabled]}
+              onPress={getDirections}
+              activeOpacity={0.85}
+              disabled={routing}
+            >
+              {routing ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Ionicons name="navigate" size={15} color="#fff" />
+              )}
+              <Text style={styles.dirBtnText}>
+                {routing ? 'Finding route…' : 'Get Directions'}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.closeBtn} onPress={closePanel} activeOpacity={0.7}>
               <Ionicons name="close" size={18} color={colors.textMuted} />
@@ -380,6 +442,7 @@ const styles = StyleSheet.create({
     gap: 7, backgroundColor: '#2D6A9F',
     borderRadius: radius.md, paddingVertical: 11,
   },
+  dirBtnDisabled: { opacity: 0.7 },
   dirBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
   closeBtn: {
     width: 44, height: 44,
