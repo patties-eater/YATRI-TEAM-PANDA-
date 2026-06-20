@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { useRoute, RouteProp } from '@react-navigation/native';
@@ -30,7 +31,8 @@ export default function MapScreen() {
   const queue = useRef<string[]>([]);
 
   const cuisineId = route.params?.cuisineId;
-  const [filterCat, setFilterCat] = useState('All');
+  const [filterCat,  setFilterCat]  = useState('All');
+  const [isolating,  setIsolating]  = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -43,17 +45,20 @@ export default function MapScreen() {
     })();
   }, []);
 
-  // When a specific dish is requested, isolate it on the map
+  // Queued FIRST — so isolateCuisine (below) always lands after it and wins
+  useEffect(() => {
+    if (!isolating) {
+      inject(`filterCategory(${JSON.stringify(filterCat)})`);
+    }
+  }, [filterCat, isolating]);
+
+  // Queued SECOND — overrides filterCategory when a specific dish is requested
   useEffect(() => {
     if (cuisineId) {
+      setIsolating(true);
       inject(`isolateCuisine(${JSON.stringify(cuisineId)})`);
     }
   }, [cuisineId]);
-
-  // Category filter chip — also clears any isolation
-  useEffect(() => {
-    inject(`filterCategory(${JSON.stringify(filterCat)})`);
-  }, [filterCat]);
 
   function inject(js: string) {
     const cmd = js + '; true;';
@@ -70,7 +75,9 @@ export default function MapScreen() {
     queue.current = [];
   }
 
+  // Tapping a chip exits isolation mode and shows that category
   function handleChipPress(label: string) {
+    setIsolating(false);
     setFilterCat(label);
   }
 
@@ -88,6 +95,15 @@ export default function MapScreen() {
         allowUniversalAccessFromFileURLs
       />
 
+      {/* Locate-me button */}
+      <TouchableOpacity
+        style={[styles.locateBtn, { bottom: insets.bottom + 24 }]}
+        onPress={() => inject('locateUser()')}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="locate" size={22} color="#2D6A9F" />
+      </TouchableOpacity>
+
       {/* Category filter chips — float over the map */}
       <View style={[styles.filterBar, { top: insets.top + 8 }]}>
         <ScrollView
@@ -96,7 +112,7 @@ export default function MapScreen() {
           contentContainerStyle={styles.filterContent}
         >
           {CATEGORIES.map(cat => {
-            const active = cat.label === filterCat && !cuisineId;
+            const active = cat.label === filterCat && !isolating;
             return (
               <TouchableOpacity
                 key={cat.label}
@@ -334,6 +350,11 @@ const MAP_HTML = `<!DOCTYPE html>
       .bindPopup('<b>You are here</b>');
     map.setView([lat,lng],14);
   }
+
+  /* ── Fly to user's current location ── */
+  function locateUser(){
+    map.flyTo([userLat,userLng],16,{duration:1.2});
+  }
 <\/script>
 </body>
 </html>`;
@@ -380,5 +401,24 @@ const styles = StyleSheet.create({
   },
   chipTextActive: {
     color: '#fff',
+  },
+
+  locateBtn: {
+    position: 'absolute',
+    right: 16,
+    zIndex: 10,
+    width: 46,
+    height: 46,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
 });
