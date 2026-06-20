@@ -180,7 +180,10 @@ export default function SOSScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  scroll: { paddingBottom: 40 },
+  scroll: {
+  paddingBottom: 120,
+  flexGrow: 1,
+},
 
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14 },
   title: { fontSize: 26, fontWeight: '800', color: colors.text, letterSpacing: -0.5 },
