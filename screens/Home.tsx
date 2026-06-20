@@ -192,7 +192,7 @@ export default function HomeScreen() {
         </View>
         <TouchableOpacity
           style={styles.searchBtn}
-          onPress={() => navigation.navigate('Details')}
+          onPress={() => navigation.navigate('Cuisine')}
           activeOpacity={0.8}
         >
           <Ionicons name="search" size={18} color={colors.primary} />
