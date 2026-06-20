@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export const colors = {
   // Brand
   primary: '#F97316',
@@ -29,8 +31,16 @@ export const gradients = {
   primary: ['#F39C12', '#F24A1D'] as [string, string],
 } as const;
 
+// Times New Roman everywhere. Android has no bundled "Times New Roman",
+// so it falls back to the system serif (the closest match).
+export const fontFamily = Platform.select({
+  ios: 'Times New Roman',
+  android: 'serif',
+  default: 'Times New Roman',
+}) as string;
+
 export const font = {
-  family: undefined as string | undefined,
+  family: fontFamily,
   sizes: {
     title: 30,
     tagline: 14,
