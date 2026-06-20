@@ -83,7 +83,12 @@ const MINI_MAP_HTML = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style> html, body, #map { height:100%; margin:0; padding:0; background:#e8e4dd; } </style>
+<style>
+  html, body, #map { height:100%; margin:0; padding:0; background:#e8e4dd; }
+  .pin { width:30px; height:30px; border-radius:15px; border:2.5px solid #fff;
+         overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.35); background:#fff; }
+  .pin img { width:100%; height:100%; object-fit:cover; display:block; }
+</style>
 </head>
 <body>
 <div id="map"></div>
@@ -95,11 +100,16 @@ const MINI_MAP_HTML = `<!DOCTYPE html>
     boxZoom:false, keyboard:false, tap:false, touchZoom:false
   }).setView([27.7172, 85.324], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
-  var dots = L.layerGroup().addTo(map);
-  window.renderDots = function(list){
-    dots.clearLayers();
+  var foods = L.layerGroup().addTo(map);
+  window.renderMarkers = function(list){
+    foods.clearLayers();
     list.forEach(function(d){
-      L.circleMarker([d.lat, d.lng], { radius:6, weight:2.5, color:d.accent, fillColor:'#fff', fillOpacity:1 }).addTo(dots);
+      var icon = L.divIcon({
+        className: '',
+        html: '<div class="pin" style="border-color:'+d.accent+'"><img src="'+d.image+'"/></div>',
+        iconSize: [30,30], iconAnchor: [15,15]
+      });
+      L.marker([d.lat, d.lng], { icon: icon }).addTo(foods);
     });
   };
   window.flyTo = function(lat,lng){ map.setView([lat,lng], 14, { animate:true }); };
@@ -108,8 +118,13 @@ const MINI_MAP_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const DOT_DATA = CUISINES.flatMap(c =>
-  c.locations.map(loc => ({ lat: loc.latitude, lng: loc.longitude, accent: c.accent })),
+const FOOD_MARKERS = CUISINES.flatMap(c =>
+  c.locations.map(loc => ({
+    lat: loc.latitude,
+    lng: loc.longitude,
+    accent: c.accent,
+    image: c.image,
+  })),
 );
 
 
@@ -125,10 +140,10 @@ export default function HomeScreen() {
 
   const run = (js: string) => webRef.current?.injectJavaScript(js + ';true;');
 
-  // Draw all dots + center on the first place once the map is ready.
+  // Draw all food markers + center on the first place once the map is ready.
   useEffect(() => {
     if (!ready) return;
-    run(`window.renderDots(${JSON.stringify(DOT_DATA)})`);
+    run(`window.renderMarkers(${JSON.stringify(FOOD_MARKERS)})`);
     run(`window.flyTo(${PLACES[idx].lat},${PLACES[idx].lng})`);
   }, [ready]);
 
@@ -195,7 +210,6 @@ export default function HomeScreen() {
 
         {/* Place title row */}
         <View style={styles.placeRow}>
-          <Text style={styles.placeEmoji}>{place.emoji}</Text>
           <View style={styles.placeMeta}>
             <Text style={styles.placeName}>{place.name}</Text>
             <View style={styles.countPill}>
