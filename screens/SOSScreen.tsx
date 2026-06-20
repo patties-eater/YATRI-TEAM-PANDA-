@@ -22,13 +22,6 @@ const EMERGENCY_SERVICES = [
   { id: 'tourist_police',label: 'Tourist Police',    number: '1144', icon: 'people'           as const, color: '#778873' },
 ];
 
-const SAFETY_TIPS = [
-  { icon: 'location-outline' as const, tip: 'Share your GPS location with someone you trust.' },
-  { icon: 'call-outline'    as const, tip: 'Stay on the line with emergency services.' },
-  { icon: 'navigate-outline' as const, tip: 'Note nearby landmarks to describe your position.' },
-  { icon: 'battery-charging-outline' as const, tip: 'Keep your phone charged while travelling.' },
-];
-
 export default function SOSScreen() {
   const pulse = useRef(new Animated.Value(1)).current;
   const ringOpacity = useRef(new Animated.Value(0.6)).current;
@@ -108,10 +101,8 @@ export default function SOSScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        
         <View style={styles.header}>
           <Text style={styles.title}>Emergency SOS</Text>
           <Text style={styles.subtitle}>Stay calm — help is available 24/7</Text>
@@ -177,23 +168,10 @@ export default function SOSScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Safety Tips</Text>
-          <View style={styles.tipsCard}>
-            {SAFETY_TIPS.map((t, i) => (
-              <View key={i} style={[styles.tipRow, i < SAFETY_TIPS.length - 1 && styles.tipDivider]}>
-                <View style={styles.tipIconBox}>
-                  <Ionicons name={t.icon} size={16} color={colors.primary} />
-                </View>
-                <Text style={styles.tipText}>{t.tip}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
         <Text style={styles.disclaimer}>
           For genuine emergencies only. Misuse of emergency services is a punishable offence.
         </Text>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -238,6 +216,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 12 },
 
   servicesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+
   serviceCard: {
     width: '47%',
     backgroundColor: colors.card,
@@ -247,21 +226,20 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderColor: colors.surface,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
   },
+
   serviceIconBox: {
     width: 52, height: 52,
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   serviceLabel:  { fontSize: 13, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  numberBadge:   { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 4 },
-  serviceNumber: { fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
+
+  numberBadge: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 4 },
+
+  serviceNumber: { fontSize: 14, fontWeight: '800' },
 
   locationCard: {
     flexDirection: 'row',
@@ -272,47 +250,21 @@ const styles = StyleSheet.create({
     gap: 14,
     borderWidth: 1,
     borderColor: colors.surface,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
   },
+
   locationIconBox: {
     width: 46, height: 46,
     borderRadius: radius.sm,
     backgroundColor: colors.primary + '18',
     alignItems: 'center',
     justifyContent: 'center',
-    flexShrink: 0,
   },
-  locationInfo:  { flex: 1, gap: 3 },
-  locationTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
-  locationSub:   { fontSize: 12, color: colors.textMuted, lineHeight: 16 },
 
-  tipsCard: {
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.surface,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
-  },
-  tipRow:     { flexDirection: 'row', alignItems: 'flex-start', padding: 14, gap: 12 },
-  tipDivider: { borderBottomWidth: 1, borderBottomColor: colors.surface },
-  tipIconBox: {
-    width: 30, height: 30,
-    borderRadius: radius.sm,
-    backgroundColor: colors.primary + '14',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  tipText: { flex: 1, fontSize: 13, color: colors.textMuted, lineHeight: 19, paddingTop: 6 },
+  locationInfo: { flex: 1, gap: 3 },
+
+  locationTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
+
+  locationSub: { fontSize: 12, color: colors.textMuted, lineHeight: 16 },
 
   disclaimer: {
     marginHorizontal: 20,
