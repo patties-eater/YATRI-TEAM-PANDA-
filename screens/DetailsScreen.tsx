@@ -28,7 +28,7 @@ export default function DetailsScreen() {
   });
 
   function handlePress(item: Cuisine) {
-    navigation.navigate('Map', { cuisineId: item.id });
+    navigation.navigate('DishDetail', { cuisineId: item.id });
   }
 
   return (

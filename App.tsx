@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { NotificationProvider } from './components/Notification';
-import TabNavigator from './navigation/TabNavigator';
+import RootNavigator from './navigation/RootNavigator';
 
 export default function App() {
   return (
@@ -12,7 +12,7 @@ export default function App() {
       <NotificationProvider>
         <StatusBar style="dark" />
         <NavigationContainer>
-          <TabNavigator />
+          <RootNavigator />
         </NavigationContainer>
       </NotificationProvider>
     </SafeAreaProvider>
