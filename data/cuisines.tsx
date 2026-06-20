@@ -19,7 +19,6 @@ type CuisinesContextValue = {
 
 const CuisinesContext = createContext<CuisinesContextValue | null>(null);
 
-// Shape returned by the embedded Supabase query.
 type Row = {
   id: string;
   name: string;

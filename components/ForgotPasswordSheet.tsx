@@ -65,7 +65,6 @@ export default function ForgotPasswordSheet({ visible, onClose, defaultEmail = '
         }),
       ]).start(() => setRendered(false));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const handleSend = () => {
@@ -78,7 +77,6 @@ export default function ForgotPasswordSheet({ visible, onClose, defaultEmail = '
       return;
     }
     setSending(true);
-    // Simulate a network request.
     setTimeout(() => {
       setSending(false);
       onClose();

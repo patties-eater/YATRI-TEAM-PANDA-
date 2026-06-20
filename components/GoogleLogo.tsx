@@ -2,7 +2,6 @@ import Svg, { Path } from 'react-native-svg';
 
 type Props = { size?: number };
 
-/** The official multi-color Google "G" mark. */
 export default function GoogleLogo({ size = 18 }: Props) {
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48">

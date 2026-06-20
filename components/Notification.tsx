@@ -27,7 +27,6 @@ type NotifOptions = {
   title: string;
   message?: string;
   type?: NotifType;
-  /** auto-dismiss after this many ms (default 3500) */
   duration?: number;
 };
 
@@ -37,7 +36,6 @@ type NotifContextValue = {
 
 const NotificationContext = createContext<NotifContextValue | null>(null);
 
-/** Hook to fire a native-style in-app notification banner. */
 export function useNotification(): NotifContextValue {
   const ctx = useContext(NotificationContext);
   if (!ctx) throw new Error('useNotification must be used inside <NotificationProvider>');
@@ -85,7 +83,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => () => { if (hideTimer.current) clearTimeout(hideTimer.current); }, []);
 
-  // Swipe up to dismiss, like a real notification.
   const pan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_e, g) => g.dy < -6,

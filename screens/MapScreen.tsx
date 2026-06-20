@@ -18,10 +18,8 @@ const CATEGORIES = [
   'Soup', 'Dessert', 'Curry', 'Side Dish',
 ];
 
-// Used as the route start point when the user's GPS isn't available.
 const FALLBACK_ORIGIN = { latitude: 27.7172, longitude: 85.324 };
 
-// Straight-line distance in km (for the routing fallback estimate).
 function haversineKm(a: LatLng, b: LatLng) {
   const R = 6371;
   const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
@@ -37,8 +35,6 @@ function haversineKm(a: LatLng, b: LatLng) {
 type Selected = { cuisine: Cuisine; location: CuisineLocation };
 type LatLng   = { latitude: number; longitude: number };
 
-// Leaflet + OpenStreetMap map (no API key required). Talks to RN through
-// window.ReactNativeWebView.postMessage and injected JS function calls.
 const MAP_HTML = `<!DOCTYPE html>
 <html>
 <head>
@@ -118,19 +114,16 @@ export default function MapScreen() {
   const panelY  = useRef(new Animated.Value(320)).current;
   const watchRef = useRef<Location.LocationSubscription | null>(null);
 
-  // Stop watching location if the screen unmounts mid-navigation.
   useEffect(() => () => { watchRef.current?.remove(); }, []);
 
   const run = (js: string) => webRef.current?.injectJavaScript(js + ';true;');
 
-  // ── Visible markers ─────────────────────────────────────────────────────────
   const visibleCuisines = isolating && cuisineId
     ? CUISINES.filter(c => c.id === cuisineId)
     : filterCat === 'All'
     ? CUISINES
     : CUISINES.filter(c => c.category === filterCat);
 
-  // ── Location ────────────────────────────────────────────────────────────────
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -140,7 +133,6 @@ export default function MapScreen() {
     })();
   }, []);
 
-  // ── Push markers whenever the filter / data changes ─────────────────────────
   useEffect(() => {
     if (!ready) return;
     const data = visibleCuisines.flatMap(c =>
@@ -156,7 +148,6 @@ export default function MapScreen() {
     run(`window.renderMarkers(${JSON.stringify(data)})`);
   }, [ready, filterCat, isolating, cuisineId, CUISINES.length]);
 
-  // ── Show user dot (auto-center only when no dish/place was requested) ────────
   useEffect(() => {
     if (!ready || !userCoord) return;
     run(`window.showUser(${userCoord.latitude},${userCoord.longitude})`);
@@ -165,7 +156,6 @@ export default function MapScreen() {
     }
   }, [ready, userCoord]);
 
-  // ── Center on a place when opened from Home (coords only, no dish) ───────────
   useEffect(() => {
     if (!ready || cuisineId) return;
     if (paramLat !== undefined && paramLng !== undefined) {
@@ -173,20 +163,17 @@ export default function MapScreen() {
     }
   }, [ready, paramLat, paramLng]);
 
-  // ── Isolate dish when coming from DishDetail ────────────────────────────────
   useEffect(() => {
     if (!ready || !cuisineId) return;
     setIsolating(true);
     const cuisine = CUISINES.find(c => c.id === cuisineId);
     if (!cuisine) return;
 
-    // If exact lat/lng were passed (from DishDetail location), prefer that location
     let loc = cuisine.locations.find(l => (
       paramLat !== undefined && paramLng !== undefined &&
       l.latitude === paramLat && l.longitude === paramLng
     ));
 
-    // Fallback to first location if no exact match
     if (!loc) loc = cuisine.locations[0];
 
     if (!loc) return;
@@ -195,14 +182,13 @@ export default function MapScreen() {
     return () => clearTimeout(t);
   }, [ready, cuisineId]);
 
-  // ── WebView messages ────────────────────────────────────────────────────────
   function onMessage(e: WebViewMessageEvent) {
     let msg: any;
     try { msg = JSON.parse(e.nativeEvent.data); } catch { return; }
     if (msg.type === 'ready') {
       setReady(true);
     } else if (msg.type === 'marker') {
-      if (navigating) return; // don't switch dishes while navigating
+      if (navigating) return;
       const cuisine = CUISINES.find(c => c.id === msg.cuisineId);
       const location = cuisine?.locations.find(l => l.id === msg.locId);
       if (cuisine && location) openPanel({ cuisine, location });
@@ -211,7 +197,6 @@ export default function MapScreen() {
     }
   }
 
-  // ── Panel helpers ───────────────────────────────────────────────────────────
   function openPanel(item: Selected) {
     run('window.clearRoute()');
     setHasRoute(false);
@@ -228,7 +213,6 @@ export default function MapScreen() {
       .start(() => setSelected(null));
   }
 
-  // Get the user's location on demand (used as the route start point).
   async function ensureOrigin(): Promise<LatLng | null> {
     if (userCoord) return userCoord;
     try {
@@ -245,7 +229,6 @@ export default function MapScreen() {
     }
   }
 
-  // ── Directions (shortest road route via OSRM, straight-line fallback) ────────
   async function getDirections() {
     if (!selected || routing) return;
     const dest = selected.location;
@@ -271,10 +254,8 @@ export default function MapScreen() {
           meta = { distance: data.routes[0].distance, duration: data.routes[0].duration };
         }
       } catch {
-        // network/server error — fall through to straight line
       }
 
-      // Fallback: draw the shortest straight line if routing failed.
       if (!coords || coords.length < 2) {
         coords = [
           [origin.latitude, origin.longitude],
@@ -282,7 +263,6 @@ export default function MapScreen() {
         ];
       }
 
-      // Trip estimate (km + minutes).
       if (meta) {
         setTrip({
           km: (meta.distance / 1000).toFixed(1),
@@ -307,7 +287,6 @@ export default function MapScreen() {
     }
   }
 
-  // ── Live navigation (Google-Maps style follow) ──────────────────────────────
   async function startNavigation() {
     const origin = await ensureOrigin();
     if (!origin) {
@@ -356,7 +335,6 @@ export default function MapScreen() {
         )}
       />
 
-      {/* Header + category chips */}
       <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
         <View style={styles.header}>
           <Text style={styles.title}>Food Map</Text>
@@ -379,7 +357,6 @@ export default function MapScreen() {
         </ScrollView>
       </View>
 
-      {/* Locate-me button */}
       <TouchableOpacity
         style={[styles.locateBtn, { bottom: insets.bottom + 24 }]}
         onPress={async () => {
@@ -392,7 +369,6 @@ export default function MapScreen() {
         <Ionicons name="locate" size={22} color="#2D6A9F" />
       </TouchableOpacity>
 
-      {/* Bottom detail panel (hidden while navigating) */}
       {selected && !navigating && (
         <Animated.View style={[styles.panel, { bottom: insets.bottom + 16, transform: [{ translateY: panelY }] }]}>
           <View style={styles.panelHandle} />
@@ -454,7 +430,6 @@ export default function MapScreen() {
         </Animated.View>
       )}
 
-      {/* Live navigation bar */}
       {navigating && selected && (
         <View style={[styles.navBar, { bottom: insets.bottom + 16 }]}>
           <View style={styles.navIconBox}>
@@ -585,7 +560,6 @@ const styles = StyleSheet.create({
   tripText: { fontSize: 13, fontWeight: '700', color: colors.text },
   tripDot:  { fontSize: 13, color: colors.textMuted, marginHorizontal: 2 },
 
-  // Live navigation bar
   navBar: {
     position: 'absolute',
     left: 16, right: 16,

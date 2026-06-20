@@ -18,7 +18,6 @@ import { colors, radius } from '../theme';
 import { useCuisines } from '../data/cuisines';
 import type { Cuisine } from '../cuisines';
 
-// ─── Places ──────────────────────────────────────────────────────────────────
 type Place = {
   name: string;
   lat: number;
@@ -45,7 +44,6 @@ function cuisinesFor(place: Place, all: Cuisine[]) {
   return all.filter(c => c.locations.some(l => place.areaKeys.includes(l.area)));
 }
 
-// ── Swipeable place card (swipe left→right to open it on the map) ─────────────
 function PlaceCard({
   place,
   dishCount,
@@ -67,9 +65,6 @@ function PlaceCard({
         g.dx > 10 && Math.abs(g.dx) > Math.abs(g.dy) * 1.2,
       onPanResponderMove: (_, g) => tx.setValue(Math.max(0, Math.min(g.dx, 130))),
       onPanResponderRelease: (_, g) => {
-        // Always spring the card back; navigate when swiped far enough. We do
-        // NOT slide it off-screen — navigation re-renders Home and would
-        // interrupt the reset, leaving the card stuck/invisible.
         Animated.spring(tx, { toValue: 0, useNativeDriver: true, bounciness: 6 }).start();
         if (g.dx > 100) onOpenMap();
       },
@@ -120,7 +115,6 @@ function PlaceCard({
   );
 }
 
-// Leaflet + OpenStreetMap preview (no API key).
 const MINI_MAP_HTML = `<!DOCTYPE html>
 <html>
 <head>
@@ -163,7 +157,6 @@ const MINI_MAP_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
   const { cuisines: CUISINES } = useCuisines();
@@ -198,13 +191,11 @@ export default function HomeScreen() {
     } catch {}
   }
 
-  // Tap a place → fly the mini-map preview there + highlight it.
   function selectPlace(i: number) {
     setIdx(i);
     run(`window.flyTo(${PLACES[i].lat},${PLACES[i].lng})`);
   }
 
-  // Swipe a place → open it on the full Map page.
   function openPlaceOnMap(p: Place) {
     navigation.navigate('Map', { latitude: p.lat, longitude: p.lng });
   }
@@ -221,14 +212,12 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      {/* ── Header ── */}
       <View style={styles.header}>
         <Text style={styles.title}>Discover</Text>
         <Text style={styles.subtitle}>Local cuisine around Nepal</Text>
       </View>
 
       <View style={styles.body}>
-        {/* ── Mini map ── */}
         <View style={[styles.mapWrap, { height: mapHeight }]}>
           <WebView
             ref={webRef}
@@ -241,7 +230,6 @@ export default function HomeScreen() {
             pointerEvents="none"
           />
 
-          {/* Tap overlay — opens the full map */}
           <TouchableOpacity
             style={StyleSheet.absoluteFill}
             onPress={() => navigation.navigate('Map')}
@@ -254,7 +242,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* ── Search bar (between map and places) ── */}
         <View style={styles.searchBar}>
           <Ionicons name="search" size={16} color={colors.textMuted} />
           <TextInput
@@ -272,7 +259,6 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* ── Places ── */}
         <ScrollView
           style={styles.placeListWrap}
           contentContainerStyle={styles.placeList}
@@ -302,7 +288,6 @@ export default function HomeScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
 
@@ -316,7 +301,6 @@ const styles = StyleSheet.create({
 
   body: { flex: 1, paddingBottom: 12 },
 
-  // Map
   mapWrap: {
     marginHorizontal: 16,
     borderRadius: radius.lg,
@@ -338,7 +322,6 @@ const styles = StyleSheet.create({
   },
   expandText: { fontSize: 11, color: '#fff', fontWeight: '600' },
 
-  // Search bar (between map and list)
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -354,7 +337,6 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 14, color: colors.text },
 
-  // Place list
   placeListWrap: { flex: 1, marginTop: 10 },
   placeList: { paddingHorizontal: 16, paddingBottom: 16, gap: 12 },
 

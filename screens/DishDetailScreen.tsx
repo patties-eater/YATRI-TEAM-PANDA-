@@ -55,7 +55,6 @@ export default function DishDetailScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         
-        {/* Hero */}
         <View style={styles.hero}>
           <Image source={{ uri: dish.image }} style={styles.heroImg} />
           <View style={[styles.emojiBadge, { backgroundColor: dish.accent }]}>
@@ -63,7 +62,6 @@ export default function DishDetailScreen() {
           </View>
         </View>
 
-        {/* Name */}
         <View style={styles.nameRow}>
           <Text style={styles.name}>{dish.name}</Text>
           <View style={[styles.catBadge, { backgroundColor: dish.accent + '22' }]}>
@@ -71,7 +69,6 @@ export default function DishDetailScreen() {
           </View>
         </View>
 
-        {/* Tags */}
         {dish.tags.length > 0 && (
           <View style={styles.tagRow}>
             {dish.tags.map(tag => (
@@ -82,13 +79,11 @@ export default function DishDetailScreen() {
           </View>
         )}
 
-        {/* About */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
           <Text style={styles.description}>{dish.description}</Text>
         </View>
 
-        {/* Locations */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             Where to find it
@@ -98,7 +93,6 @@ export default function DishDetailScreen() {
           <View style={styles.locationsCard}>
             {dish.locations.map((loc, i) => (
               
-              // ✅ CLICKABLE CARD
               <TouchableOpacity
                 key={loc.id}
                 activeOpacity={0.7}
@@ -123,7 +117,6 @@ export default function DishDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* View on Map (ALL LOCATIONS) */}
       <View style={styles.ctaBar}>
         <TouchableOpacity
           style={[styles.ctaBtn, { backgroundColor: dish.accent }]}

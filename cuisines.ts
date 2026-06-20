@@ -1,5 +1,3 @@
-// Data now lives in Supabase. These are just the shared types.
-// Fetching is handled by the CuisinesProvider in data/cuisines.tsx.
 
 export type CuisineLocation = {
   id: string;

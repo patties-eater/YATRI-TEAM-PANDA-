@@ -112,13 +112,11 @@ export default function SOSScreen() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Emergency SOS</Text>
           <Text style={styles.subtitle}>Stay calm — help is available 24/7</Text>
         </View>
 
-        {/* Big SOS Button */}
         <View style={styles.sosWrapper}>
           <Animated.View style={[styles.sosRing, { opacity: ringOpacity }]} />
           <Animated.View style={{ transform: [{ scale: pulse }] }}>
@@ -134,7 +132,6 @@ export default function SOSScreen() {
           <Text style={styles.sosMeta}>Tap to call Tourist Police (1144)</Text>
         </View>
 
-        {/* Emergency Services */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Emergency Services</Text>
           <View style={styles.servicesGrid}>
@@ -157,7 +154,6 @@ export default function SOSScreen() {
           </View>
         </View>
 
-        {/* Share Location */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Share My Location</Text>
           <TouchableOpacity
@@ -181,7 +177,6 @@ export default function SOSScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Safety Tips */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Safety Tips</Text>
           <View style={styles.tipsCard}>
@@ -196,7 +191,6 @@ export default function SOSScreen() {
           </View>
         </View>
 
-        {/* Disclaimer */}
         <Text style={styles.disclaimer}>
           For genuine emergencies only. Misuse of emergency services is a punishable offence.
         </Text>
@@ -213,7 +207,6 @@ const styles = StyleSheet.create({
   title:    { fontSize: 26, fontWeight: '800', color: colors.text, letterSpacing: -0.5 },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
 
-  // SOS button area
   sosWrapper: { alignItems: 'center', paddingVertical: 36, position: 'relative' },
   sosRing: {
     position: 'absolute',
@@ -241,11 +234,9 @@ const styles = StyleSheet.create({
   sosLabel: { fontSize: 22, fontWeight: '900', color: '#fff', letterSpacing: 2 },
   sosMeta:  { marginTop: 18, fontSize: 13, color: colors.textMuted, fontWeight: '500' },
 
-  // Sections
   section:      { paddingHorizontal: 16, marginBottom: 20 },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 12 },
 
-  // Services grid
   servicesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   serviceCard: {
     width: '47%',
@@ -272,7 +263,6 @@ const styles = StyleSheet.create({
   numberBadge:   { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 4 },
   serviceNumber: { fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
 
-  // Location card
   locationCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -300,7 +290,6 @@ const styles = StyleSheet.create({
   locationTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
   locationSub:   { fontSize: 12, color: colors.textMuted, lineHeight: 16 },
 
-  // Tips card
   tipsCard: {
     backgroundColor: colors.card,
     borderRadius: radius.md,

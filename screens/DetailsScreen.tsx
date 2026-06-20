@@ -43,10 +43,9 @@ const CATEGORIES: string[] = [
   'Side Dish',
 ];
 
-/* responsive layout constants */
-const H_PAD = 16; // list horizontal padding (each side)
-const COL_GAP = 12; // gap between grid columns
-const MAX_CONTENT_WIDTH = 720; // keep content readable on large screens
+const H_PAD = 16;
+const COL_GAP = 12;
+const MAX_CONTENT_WIDTH = 720;
 
 function getColumns(width: number) {
   if (width >= 920) return 3;
@@ -64,7 +63,6 @@ function smoothNext() {
   );
 }
 
-/* ---- Animated dish card (entrance + press) ---- */
 function DishCard({
   item,
   index,
@@ -128,7 +126,6 @@ function DishCard({
         onPressIn={pressIn}
         onPressOut={pressOut}
       >
-        {/* Dish image */}
         <View style={styles.imgWrap}>
           <Image
             source={{ uri: item.image }}
@@ -137,7 +134,6 @@ function DishCard({
           />
         </View>
 
-        {/* Info */}
         <View style={styles.info}>
           <View style={styles.nameRow}>
             <Text style={styles.name} numberOfLines={1}>
@@ -191,7 +187,6 @@ export default function DetailsScreen() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
 
-  /* responsive sizing */
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, MAX_CONTENT_WIDTH);
   const numColumns = getColumns(width);
@@ -201,7 +196,6 @@ export default function DetailsScreen() {
       ? available
       : (available - COL_GAP * (numColumns - 1)) / numColumns;
 
-  /* header intro animation */
   const intro = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(intro, {
@@ -247,13 +241,11 @@ export default function DetailsScreen() {
         ],
       }}
     >
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Local Cuisine</Text>
         <Text style={styles.subtitle}>Explore Nepal's finest dishes</Text>
       </View>
 
-      {/* Search */}
       <View style={styles.searchWrap}>
         <Ionicons name="search-outline" size={16} color={colors.textMuted} />
         <TextInput
@@ -270,7 +262,6 @@ export default function DetailsScreen() {
         )}
       </View>
 
-      {/* Category chips */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -306,7 +297,6 @@ export default function DetailsScreen() {
         })}
       </ScrollView>
 
-      {/* Results label */}
       <View style={styles.resultsRow}>
         <Text style={styles.resultsText}>{filtered.length} dishes</Text>
       </View>
@@ -398,7 +388,6 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: font.sizes.body, color: colors.text },
 
-  // Category chips
   catRow: {
     paddingHorizontal: 16,
     paddingVertical: 16,
