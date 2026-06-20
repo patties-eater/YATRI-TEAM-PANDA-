@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { NotificationProvider } from './components/Notification';
+import { CuisinesProvider } from './data/cuisines';
 import RootNavigator from './navigation/RootNavigator';
 import { font } from './theme';
 
@@ -42,10 +43,12 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NotificationProvider>
-        <StatusBar style="dark" />
-        <NavigationContainer>
-          <RootNavigator />
-        </NavigationContainer>
+        <CuisinesProvider>
+          <StatusBar style="dark" />
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+        </CuisinesProvider>
       </NotificationProvider>
     </SafeAreaProvider>
   );

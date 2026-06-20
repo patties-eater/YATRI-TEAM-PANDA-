@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, radius } from '../theme';
-import { getCuisine } from '../cuisines';
+import { useCuisines } from '../data/cuisines';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'DishDetail'>;
@@ -20,6 +20,7 @@ type Route = RouteProp<RootStackParamList, 'DishDetail'>;
 export default function DishDetailScreen() {
   const navigation = useNavigation<Nav>();
   const { params } = useRoute<Route>();
+  const { getCuisine } = useCuisines();
   const dish = getCuisine(params.cuisineId);
 
   if (!dish) {
