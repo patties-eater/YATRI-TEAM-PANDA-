@@ -1,21 +1,27 @@
 {
   "expo": {
     "name": "YATRI",
-    "slug": "yatri",
+    "slug": "jojo",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+
+    "owner": "souryarajbanshi21s-team",
+
     "ios": {
       "supportsTablet": true
     },
-    "web": {},
-    "extra": {
-      "eas": {
-        "projectId": "3d61d4e8-60fb-44f9-b00f-a13c1fd9f3a3"
-      }
-    },
+
     "android": {
       "package": "com.prajjwal_gautam12.yatri"
+    },
+
+    "web": {},
+
+    "extra": {
+      "eas": {
+        "projectId": "163a8fff-5ca5-48d6-8590-4cb62b0e3269"
+      }
     }
   }
 }
