@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   TextInput,
   Animated,
+  Easing,
   PanResponder,
   useWindowDimensions,
 } from 'react-native';
@@ -32,12 +33,46 @@ type Place = {
 const PLACES: Place[] = [
   { name: 'Bhaktapur',  lat: 27.6722, lng: 85.4298, description: 'Medieval Newar city — home of Juju Dhau and Yomari.', emoji: '🏛️', areaKeys: ['Bhaktapur'] },
   { name: 'Patan',      lat: 27.6726, lng: 85.3239, description: 'City of artisans and authentic Newari feast food.', emoji: '🕌', areaKeys: ['Patan', 'Patan Durbar'] },
-  { name: 'Basantapur', lat: 27.7042, lng: 85.3070, description: 'Old Kathmandu Durbar quarter — heart of Newari street food.', emoji: '🏯', areaKeys: ['Basantapur'] },
+  { name: 'Kathmandu', lat: 27.7045, lng: 85.3076, description: "The capital's old quarters — where Nepal's street and festival foods gather.", emoji: '🏯', areaKeys: ['Kathmandu', 'Basantapur', 'Asan'] },
+  { name: 'Kirtipur',  lat: 27.6779, lng: 85.2795, description: 'Hilltop Newar town known for rustic hill staples.', emoji: '⛰️', areaKeys: ['Kirtipur'] },
+  { name: 'Tokha',     lat: 27.7820, lng: 85.3290, description: 'Northern Valley town famed for winter chaku.', emoji: '🍬', areaKeys: ['Tokha'] },
 ];
 
 function cuisinesFor(place: Place, all: Cuisine[]) {
   return all.filter(c =>
     c.locations.some(l => l.isOrigin && place.areaKeys.includes(l.area)),
+  );
+}
+
+// Continuously scrolls its children right → left (auto marquee, single row).
+function Marquee({ children }: { children: ReactNode }) {
+  const x = useRef(new Animated.Value(0)).current;
+  const [w, setW] = useState(0);
+
+  useEffect(() => {
+    if (!w) return;
+    x.setValue(0);
+    const anim = Animated.loop(
+      Animated.timing(x, {
+        toValue: -w,
+        duration: w * 22,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [w]);
+
+  return (
+    <View style={styles.marqueeWrap}>
+      <Animated.View style={{ flexDirection: 'row', transform: [{ translateX: x }] }}>
+        <View style={styles.marqueeRow} onLayout={e => setW(e.nativeEvent.layout.width)}>
+          {children}
+        </View>
+        <View style={styles.marqueeRow}>{children}</View>
+      </Animated.View>
+    </View>
   );
 }
 
@@ -108,19 +143,14 @@ function PlaceCard({
           <Text style={styles.placeDesc} numberOfLines={1}>{place.description}</Text>
 
           {dishes.length > 0 && (
-            <View style={styles.itemsRow}>
-              {dishes.slice(0, 6).map(d => (
+            <Marquee>
+              {dishes.map(d => (
                 <View key={d.id} style={styles.itemChip}>
                   <Image source={dishImageSource(d.id, d.image)} style={styles.itemImg} />
                   <Text style={styles.itemName} numberOfLines={1}>{d.name}</Text>
                 </View>
               ))}
-              {dishes.length > 6 && (
-                <View style={styles.moreChip}>
-                  <Text style={styles.moreText}>+{dishes.length - 6}</Text>
-                </View>
-              )}
-            </View>
+            </Marquee>
           )}
         </TouchableOpacity>
       </Animated.View>
@@ -175,7 +205,6 @@ export default function HomeScreen() {
   const { cuisines: CUISINES } = useCuisines();
   const webRef = useRef<WebView>(null);
   const [ready, setReady] = useState(false);
-  const [idx, setIdx] = useState(0);
   const [query, setQuery] = useState('');
 
   const FOOD_MARKERS = CUISINES.flatMap(c =>
@@ -195,18 +224,13 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!ready || FOOD_MARKERS.length === 0) return;
     run(`window.renderMarkers(${JSON.stringify(FOOD_MARKERS)})`);
-    run(`window.flyTo(${PLACES[idx].lat},${PLACES[idx].lng})`);
+    run(`window.flyTo(${PLACES[0].lat},${PLACES[0].lng})`);
   }, [ready, CUISINES.length]);
 
   function onMessage(e: WebViewMessageEvent) {
     try {
       if (JSON.parse(e.nativeEvent.data)?.type === 'ready') setReady(true);
     } catch {}
-  }
-
-  function selectPlace(i: number) {
-    setIdx(i);
-    run(`window.flyTo(${PLACES[i].lat},${PLACES[i].lng})`);
   }
 
   function openPlacePage(p: Place) {
@@ -289,19 +313,16 @@ export default function HomeScreen() {
           {filteredPlaces.length === 0 ? (
             <Text style={styles.noMatch}>No places match “{query}”.</Text>
           ) : (
-            filteredPlaces.map(p => {
-              const realIndex = PLACES.indexOf(p);
-              return (
-                <PlaceCard
-                  key={p.name}
-                  place={p}
-                  dishes={cuisinesFor(p, CUISINES)}
-                  active={realIndex === idx}
-                  onTap={() => selectPlace(realIndex)}
-                  onOpenMap={() => openPlacePage(p)}
-                />
-              );
-            })
+            filteredPlaces.map(p => (
+              <PlaceCard
+                key={p.name}
+                place={p}
+                dishes={cuisinesFor(p, CUISINES)}
+                active={false}
+                onTap={() => openPlacePage(p)}
+                onOpenMap={() => openPlacePage(p)}
+              />
+            ))
           )}
         </ScrollView>
       </View>
@@ -409,6 +430,8 @@ const styles = StyleSheet.create({
   placeCount: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   placeDesc: { fontSize: 12.5, color: colors.textMuted, lineHeight: 18 },
 
+  marqueeWrap: { overflow: 'hidden', marginTop: 10 },
+  marqueeRow: { flexDirection: 'row', gap: 8, paddingRight: 8 },
   itemsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
   itemChip: {
     flexDirection: 'row',

@@ -25,11 +25,11 @@ export default function PlaceScreen() {
   const { cuisines, loading } = useCuisines();
 
   const dishes = cuisines.filter(c =>
-    c.locations.some(l => params.areaKeys.includes(l.area)),
+    c.locations.some(l => l.isOrigin && params.areaKeys.includes(l.area)),
   );
 
-  function openOnMap(cuisineId: string) {
-    navigation.navigate('Tabs', { screen: 'Map', params: { cuisineId } });
+  function openDish(cuisineId: string) {
+    navigation.navigate('DishDetail', { cuisineId });
   }
 
   return (
@@ -64,7 +64,7 @@ export default function PlaceScreen() {
               key={d.id}
               style={styles.card}
               activeOpacity={0.85}
-              onPress={() => openOnMap(d.id)}
+              onPress={() => openDish(d.id)}
             >
               <Image source={dishImageSource(d.id, d.image)} style={styles.img} />
               <View style={styles.info}>
@@ -75,7 +75,7 @@ export default function PlaceScreen() {
                 </Text>
               </View>
               <View style={styles.mapBtn}>
-                <Ionicons name="map" size={16} color="#fff" />
+                <Ionicons name="chevron-forward" size={16} color="#fff" />
               </View>
             </TouchableOpacity>
           ))
