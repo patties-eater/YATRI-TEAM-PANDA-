@@ -1,13 +1,16 @@
-import { useEffect, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CUISINES from '../cuisines';
 import { type TabParamList } from '../navigation/TabNavigator';
+import { colors, radius } from '../theme';
 
 const KATHMANDU: [number, number] = [27.7172, 85.324];
+
+const CATEGORIES = ['All', 'Street Food', 'Main Course', 'Snack', 'Soup', 'Dessert', 'Curry', 'Side Dish'];
 
 export default function MapScreen() {
   const route  = useRoute<RouteProp<TabParamList, 'Map'>>();
@@ -17,6 +20,7 @@ export default function MapScreen() {
   const queue  = useRef<string[]>([]);
 
   const cuisineId = route.params?.cuisineId;
+  const [filterCat, setFilterCat] = useState('All');
 
   useEffect(() => {
     (async () => {
@@ -32,6 +36,10 @@ export default function MapScreen() {
   useEffect(() => {
     if (cuisineId) inject(`focusCuisine(${JSON.stringify(cuisineId)})`);
   }, [cuisineId]);
+
+  useEffect(() => {
+    inject(`filterCategory(${JSON.stringify(filterCat)})`);
+  }, [filterCat]);
 
   function inject(js: string) {
     const cmd = js + '; true;';
@@ -61,6 +69,31 @@ export default function MapScreen() {
         mixedContentMode="always"
         allowUniversalAccessFromFileURLs
       />
+
+      {/* Category filter chips — float over the map */}
+      <View style={styles.filterBar}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterContent}
+        >
+          {CATEGORIES.map(cat => {
+            const active = cat === filterCat;
+            return (
+              <TouchableOpacity
+                key={cat}
+                style={[styles.chip, active && styles.chipActive]}
+                onPress={() => setFilterCat(cat)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
     </View>
   );
 }
@@ -83,7 +116,6 @@ const CUISINE_DATA = JSON.stringify(
   }))
 );
 
-// Flat lookup keyed by location id (e.g. "1a") — used by getDirections
 const LOC_LOOKUP = JSON.stringify(
   CUISINES.reduce<Record<string, { lat: number; lng: number; name: string }>>(
     (acc, c) => {
@@ -142,13 +174,13 @@ const MAP_HTML = `<!DOCTYPE html>
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
   }).addTo(map);
 
-  /* Default to Kathmandu centre; overwritten when real GPS arrives */
   var userLat=${KATHMANDU[0]}, userLng=${KATHMANDU[1]};
   var routeOuter=null, routeInner=null;
   var markerIndex={};
+  var categoryGroups={};
   var toastTimer=null;
 
-  /* ── Toast banner ── */
+  /* ── Toast ── */
   function showToast(msg){
     var el=document.getElementById('toast');
     el.textContent=msg;
@@ -157,10 +189,22 @@ const MAP_HTML = `<!DOCTYPE html>
     toastTimer=setTimeout(function(){el.style.opacity='0';},3500);
   }
 
-  /* ── Remove route polylines ── */
+  /* ── Clear route polylines ── */
   function clearRoute(){
     if(routeOuter){map.removeLayer(routeOuter);routeOuter=null;}
     if(routeInner){map.removeLayer(routeInner);routeInner=null;}
+  }
+
+  /* ── Show / hide categories (called from RN filter chips) ── */
+  function filterCategory(cat){
+    Object.keys(categoryGroups).forEach(function(key){
+      var grp=categoryGroups[key];
+      if(cat==='All'||key===cat){
+        if(!map.hasLayer(grp))map.addLayer(grp);
+      } else {
+        if(map.hasLayer(grp))map.removeLayer(grp);
+      }
+    });
   }
 
   /* ── Directions via OSRM (free, no API key) ── */
@@ -189,9 +233,12 @@ const MAP_HTML = `<!DOCTYPE html>
       .catch(function(){showToast('Could not load route');});
   }
 
-  /* ── Cuisine markers ── */
+  /* ── Cuisine markers grouped by category ── */
   CUISINES.forEach(function(c){
     markerIndex[c.id]=[];
+    if(!categoryGroups[c.category]){
+      categoryGroups[c.category]=L.layerGroup().addTo(map);
+    }
     c.locations.forEach(function(loc){
       var icon=L.divIcon({
         html:'<div style="width:38px;height:38px;background:#fff;border-radius:50%;'
@@ -206,10 +253,9 @@ const MAP_HTML = `<!DOCTYPE html>
         +'<div class="pd">'+c.description+'</div>'
         +'<button class="db" data-id="'+loc.id+'">&#128694; Get Directions</button>';
       var m=L.marker([loc.lat,loc.lng],{icon:icon})
-        .addTo(map)
         .bindPopup(pop,{maxWidth:240});
+      categoryGroups[c.category].addLayer(m);
 
-      /* Leaflet stops click propagation on popups, so attach directly on open */
       m.on('popupopen',function(e){
         clearRoute();
         var btn=e.popup.getElement().querySelector('[data-id]');
@@ -224,7 +270,7 @@ const MAP_HTML = `<!DOCTYPE html>
     });
   });
 
-  /* ── User location (injected from RN after GPS permission) ── */
+  /* ── User location ── */
   function addUserMarker(lat,lng){
     userLat=lat; userLng=lng;
     var html='<div style="width:18px;height:18px;background:#2D6A9F;border-radius:50%;'
@@ -236,11 +282,15 @@ const MAP_HTML = `<!DOCTYPE html>
     map.setView([lat,lng],14);
   }
 
-  /* ── Focus cuisine (injected from RN when coming from Details) ── */
+  /* ── Focus cuisine from Details tab ── */
   function focusCuisine(id){
     clearRoute();
     var c=CUISINES.find(function(x){return x.id===id;});
     if(!c||!c.locations.length)return;
+    /* ensure the cuisine's category group is visible */
+    if(categoryGroups[c.category]&&!map.hasLayer(categoryGroups[c.category])){
+      map.addLayer(categoryGroups[c.category]);
+    }
     var f=c.locations[0];
     map.flyTo([f.lat,f.lng],16,{duration:1.0});
     setTimeout(function(){
@@ -255,4 +305,41 @@ const MAP_HTML = `<!DOCTYPE html>
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#F5F2EC' },
   web:  { flex: 1 },
+
+  filterBar: {
+    position: 'absolute',
+    top: 8,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  filterContent: {
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+  chip: {
+    backgroundColor: 'rgba(255,255,255,0.93)',
+    borderRadius: radius.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  chipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  chipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  chipTextActive: {
+    color: '#fff',
+  },
 });
