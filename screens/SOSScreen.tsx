@@ -16,10 +16,10 @@ import * as Location from 'expo-location';
 import { colors, radius } from '../theme';
 
 const EMERGENCY_SERVICES = [
-  { id: 'police',        label: 'Nepal Police',     number: '100',  icon: 'shield-checkmark' as const, color: '#3B6FE2' },
-  { id: 'ambulance',     label: 'Ambulance',         number: '102',  icon: 'medkit'           as const, color: '#E23B3B' },
-  { id: 'fire',          label: 'Fire Brigade',      number: '101',  icon: 'flame'            as const, color: '#E2873B' },
-  { id: 'tourist_police',label: 'Tourist Police',    number: '1144', icon: 'people'           as const, color: '#778873' },
+  { id: 'police',         label: 'Nepal Police',     number: '100',  icon: 'shield-checkmark' as const, color: '#3B6FE2' },
+  { id: 'ambulance',      label: 'Ambulance',         number: '102',  icon: 'medkit'           as const, color: '#E23B3B' },
+  { id: 'fire',           label: 'Fire Brigade',      number: '101',  icon: 'flame'            as const, color: '#E2873B' },
+  { id: 'tourist_police', label: 'Tourist Police',    number: '1144', icon: 'people'           as const, color: '#778873' },
 ];
 
 export default function SOSScreen() {
@@ -116,7 +116,8 @@ export default function SOSScreen() {
               activeOpacity={0.85}
               onPress={handleSOS}
             >
-              <Ionicons name="warning" size={36} color="#fff" />
+              {/* CHANGED: Swapped "warning" for "location" pin icon */}
+              <Ionicons name="location" size={36} color="#fff" />
               <Text style={styles.sosLabel}>SOS</Text>
             </TouchableOpacity>
           </Animated.View>
