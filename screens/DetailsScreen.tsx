@@ -30,6 +30,8 @@ if (
 
 const CATEGORIES: string[] = [
   'All',
+  'Veg',
+  'Non Veg',
   'Street Food',
   'Main Course',
   'Snack',
@@ -153,11 +155,6 @@ function DishCard({
           </Text>
 
           <View style={styles.metaRow}>
-            {item.tags.map((tag: string) => (
-              <View key={tag} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
-              </View>
-            ))}
             <View style={styles.locHint}>
               <Ionicons
                 name="location-outline"
@@ -166,10 +163,21 @@ function DishCard({
               />
               <Text style={styles.locText}>{item.locations.length} spots</Text>
             </View>
+            {item.tags.map((tag: string) => (
+              <View key={tag} style={styles.tag}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
-        <Ionicons name="chevron-forward" size={15} color={colors.surface} />
+        <View style={styles.chevron}>
+          <Ionicons
+            name="chevron-forward"
+            size={15}
+            color={colors.textMuted}
+          />
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -203,17 +211,15 @@ export default function DetailsScreen() {
   }, []);
 
   const filtered = CUISINES.filter(c => {
-    const matchCat = category === 'All' || c.category === category;
+    const matchCat =
+      category === 'All' ||
+      c.category === category ||
+      c.diet === category;
     const matchSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.description.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
-
-  function countFor(label: string) {
-    if (label === 'All') return CUISINES.length;
-    return CUISINES.filter(c => c.category === label).length;
-  }
 
   function onSelectCategory(label: string) {
     smoothNext();
@@ -378,8 +384,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingHorizontal: 20,
+    paddingVertical: 13,
     borderRadius: radius.pill,
     backgroundColor: colors.card,
     borderWidth: 1,
@@ -390,28 +396,12 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   catText: {
-    fontSize: 13,
+    fontSize: 14.5,
     fontWeight: '600',
     color: colors.textMuted,
     letterSpacing: 0.1,
   },
   catTextActive: { color: '#fff' },
-  catCount: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 5,
-  },
-  catCountActive: { backgroundColor: 'rgba(255,255,255,0.25)' },
-  catCountText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.textMuted,
-  },
-  catCountTextActive: { color: '#fff' },
 
   resultsRow: {
     paddingHorizontal: 20,
@@ -441,35 +431,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.card,
-    borderRadius: radius.md,
-    padding: 14,
-    gap: 14,
+    borderRadius: radius.lg,
+    padding: 12,
+    gap: 13,
     borderWidth: 1,
-    borderColor: colors.surface,
+    borderColor: colors.surface + 'AA',
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    shadowOpacity: 0.07,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
 
   imgWrap: {
-    width: 74,
-    height: 74,
+    width: 82,
+    height: 82,
     borderRadius: radius.md,
     overflow: 'hidden',
     flexShrink: 0,
     backgroundColor: colors.surface,
+    position: 'relative',
   },
   img: { width: '100%', height: '100%' },
 
   info: { flex: 1, gap: 5 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  name: { flex: 1, fontSize: 15.5, fontWeight: '700', color: colors.text, letterSpacing: -0.2 },
+  name: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    letterSpacing: -0.3,
+  },
 
   catBadge: {
     borderRadius: radius.pill,
-    paddingHorizontal: 8,
+    paddingHorizontal: 9,
     paddingVertical: 3,
     flexShrink: 0,
   },
@@ -479,18 +476,37 @@ const styles = StyleSheet.create({
 
   metaRow: {
     flexDirection: 'row',
-    gap: 5,
+    gap: 6,
     flexWrap: 'wrap',
     alignItems: 'center',
+    marginTop: 1,
   },
   tag: {
-    backgroundColor: colors.surface + '99',
+    backgroundColor: colors.surface + '80',
     borderRadius: radius.pill,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   tagText: { fontSize: 10, color: colors.textMuted, fontWeight: '600' },
 
-  locHint: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  locText: { fontSize: 10, color: colors.textMuted },
+  locHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: colors.surface + '40',
+    borderRadius: radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  locText: { fontSize: 10, color: colors.textMuted, fontWeight: '600' },
+
+  chevron: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
 });
