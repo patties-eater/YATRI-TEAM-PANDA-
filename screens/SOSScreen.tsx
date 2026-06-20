@@ -169,9 +169,9 @@ export default function SOSScreen() {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.disclaimer}>
-          For genuine emergencies only. Misuse of emergency services is a punishable offence.
-        </Text>
+        <Text style={[styles.disclaimer, { color: '#222', opacity: 1 }]}>
+  Powered by JOJO
+</Text>
 
       </ScrollView>
     </SafeAreaView>
