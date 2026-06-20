@@ -13,6 +13,7 @@ export type Cuisine = {
   tags: string[];
   accent: string;
   emoji: string;
+  image: string;
   locations: CuisineLocation[];
 };
 
@@ -25,6 +26,7 @@ const CUISINES: Cuisine[] = [
     tags: ['Spicy', 'Popular'],
     accent: '#E07A5F',
     emoji: '🥟',
+    image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=400&q=80',
     locations: [
       { id: '1a', latitude: 27.7154, longitude: 85.3123, area: 'Thamel' },
       { id: '1b', latitude: 27.7011, longitude: 85.3079, area: 'Freak Street' },
@@ -39,6 +41,7 @@ const CUISINES: Cuisine[] = [
     tags: ['Vegetarian', 'Traditional'],
     accent: '#F2CC8F',
     emoji: '🍛',
+    image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=400&q=80',
     locations: [
       { id: '2a', latitude: 27.7088, longitude: 85.3106, area: 'Asan' },
       { id: '2b', latitude: 27.6655, longitude: 85.3249, area: 'Patan' },
@@ -53,6 +56,7 @@ const CUISINES: Cuisine[] = [
     tags: ['Sweet', 'Festive'],
     accent: '#C4813A',
     emoji: '🍩',
+    image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80',
     locations: [
       { id: '3a', latitude: 27.6710, longitude: 85.4297, area: 'Bhaktapur' },
       { id: '3b', latitude: 27.6779, longitude: 85.2795, area: 'Kirtipur' },
@@ -66,6 +70,7 @@ const CUISINES: Cuisine[] = [
     tags: ['Warm', 'Filling'],
     accent: '#81B29A',
     emoji: '🍜',
+    image: 'https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?auto=format&fit=crop&w=400&q=80',
     locations: [
       { id: '4a', latitude: 27.7220, longitude: 85.3630, area: 'Boudha' },
       { id: '4b', latitude: 27.7175, longitude: 85.3140, area: 'Thamel' },
@@ -79,6 +84,7 @@ const CUISINES: Cuisine[] = [
     tags: ['Savory', 'Newari'],
     accent: '#3D405B',
     emoji: '🫓',
+    image: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=400&q=80',
     locations: [
       { id: '5a', latitude: 27.6644, longitude: 85.3220, area: 'Patan Durbar' },
       { id: '5b', latitude: 27.7044, longitude: 85.3068, area: 'Kathmandu Durbar' },
@@ -92,6 +98,7 @@ const CUISINES: Cuisine[] = [
     tags: ['Sweet', 'Newari'],
     accent: '#9C6B4E',
     emoji: '🍡',
+    image: 'https://images.unsplash.com/photo-1631730486784-74757d38e27f?auto=format&fit=crop&w=400&q=80',
     locations: [
       { id: '6a', latitude: 27.6688, longitude: 85.3193, area: 'Patan' },
       { id: '6b', latitude: 27.6733, longitude: 85.4308, area: 'Bhaktapur' },
@@ -105,6 +112,7 @@ const CUISINES: Cuisine[] = [
     tags: ['Savory', 'Newari'],
     accent: '#6B7F66',
     emoji: '🫔',
+    image: 'https://images.unsplash.com/photo-1574484284002-952d92456975?auto=format&fit=crop&w=400&q=80',
     locations: [
       { id: '7a', latitude: 27.7058, longitude: 85.3138, area: 'New Road' },
       { id: '7b', latitude: 27.6644, longitude: 85.3247, area: 'Patan' },
@@ -118,6 +126,7 @@ const CUISINES: Cuisine[] = [
     tags: ['Fermented', 'Traditional'],
     accent: '#5C7A4E',
     emoji: '🥬',
+    image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80',
     locations: [
       { id: '8a', latitude: 27.6843, longitude: 85.3155, area: 'Kalimati' },
       { id: '8b', latitude: 27.7147, longitude: 85.2904, area: 'Swayambhu' },
@@ -131,6 +140,7 @@ const CUISINES: Cuisine[] = [
     tags: ['Protein', 'Festival'],
     accent: '#7B5EA7',
     emoji: '🫘',
+    image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=400&q=80',
     locations: [
       { id: '9a', latitude: 27.6710, longitude: 85.4297, area: 'Bhaktapur' },
       { id: '9b', latitude: 27.7090, longitude: 85.3100, area: 'Asan' },
@@ -144,6 +154,7 @@ const CUISINES: Cuisine[] = [
     tags: ['Tangy', 'Vegetarian'],
     accent: '#D4A853',
     emoji: '🥘',
+    image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=400&q=80',
     locations: [
       { id: '10a', latitude: 27.6920, longitude: 85.3390, area: 'Baneshwor' },
       { id: '10b', latitude: 27.7000, longitude: 85.3340, area: 'Putalisadak' },

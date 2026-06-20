@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -54,8 +55,16 @@ export default function DishDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero */}
-        <View style={[styles.hero, { backgroundColor: dish.accent + '1A' }]}>
-          <Text style={styles.heroEmoji}>{dish.emoji}</Text>
+        <View style={styles.hero}>
+          <Image
+            source={{ uri: dish.image }}
+            style={styles.heroImg}
+            resizeMode="cover"
+          />
+          {/* Emoji fallback badge */}
+          <View style={[styles.emojiBadge, { backgroundColor: dish.accent }]}>
+            <Text style={styles.emojiBadgeText}>{dish.emoji}</Text>
+          </View>
         </View>
 
         {/* Name + category */}
@@ -149,12 +158,23 @@ const styles = StyleSheet.create({
   hero: {
     marginHorizontal: 16,
     marginVertical: 12,
-    height: 200,
+    height: 220,
     borderRadius: radius.lg,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+  },
+  heroImg: { width: '100%', height: '100%' },
+  emojiBadge: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    width: 44,
+    height: 44,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroEmoji: { fontSize: 90 },
+  emojiBadgeText: { fontSize: 24 },
 
   // Name row
   nameRow: {
