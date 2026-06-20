@@ -3,18 +3,18 @@ import { Platform, StyleSheet, View, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
-import HomeScreen    from '../screens/Home';
+import HomeScreen from '../screens/Home';
 import DetailsScreen from '../screens/DetailsScreen';
-import MapScreen     from '../screens/MapScreen';
-import SOSScreen     from '../screens/SOSScreen';
+import MapScreen from '../screens/MapScreen';
+import SOSScreen from '../screens/SOSScreen';
 
 import { colors, radius } from '../theme';
 
 export type TabParamList = {
-  Home:    undefined;
+  Home: undefined;
   Cuisine: undefined;
-  Map:     { cuisineId?: string; latitude?: number; longitude?: number } | undefined;
-  SOS:     undefined;
+  Map: { cuisineId?: string; latitude?: number; longitude?: number } | undefined;
+  SOS: undefined;
 };
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -25,10 +25,10 @@ const TAB_CONFIG: Record<
   keyof TabParamList,
   { label: string; active: IoniconName; inactive: IoniconName }
 > = {
-  Home:    { label: 'Home',    active: 'home',              inactive: 'home-outline' },
-  Cuisine: { label: 'Cuisine', active: 'information-circle', inactive: 'information-circle-outline' },
-  Map:     { label: 'Map',     active: 'map',               inactive: 'map-outline' },
-  SOS:     { label: 'SOS',     active: 'warning',           inactive: 'warning-outline' },
+  Home: { label: 'Home', active: 'home', inactive: 'home-outline' },
+  Cuisine: { label: 'Cuisine', active: 'restaurant', inactive: 'restaurant-outline' },
+  Map: { label: 'Map', active: 'map', inactive: 'map-outline' },
+  SOS: { label: 'SOS', active: 'warning', inactive: 'warning-outline' },
 };
 
 export default function TabNavigator() {
@@ -61,10 +61,10 @@ export default function TabNavigator() {
         };
       }}
     >
-      <Tab.Screen name="Home"    component={HomeScreen} />
+      <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Cuisine" component={DetailsScreen} />
-      <Tab.Screen name="Map"     component={MapScreen} />
-      <Tab.Screen name="SOS"     component={SOSScreen} />
+      <Tab.Screen name="Map" component={MapScreen} />
+      <Tab.Screen name="SOS" component={SOSScreen} />
     </Tab.Navigator>
   );
 }
