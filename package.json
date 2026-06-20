@@ -26,7 +26,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test:data": "node scripts/test-supabase.mjs"
+    "test:data": "node scripts/test-supabase.mjs",
+    "rehost:images": "node scripts/rehost-images.mjs"
   },
   "private": true,
   "devDependencies": {
