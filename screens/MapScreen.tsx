@@ -156,14 +156,22 @@ export default function MapScreen() {
     run(`window.renderMarkers(${JSON.stringify(data)})`);
   }, [ready, filterCat, isolating, cuisineId, CUISINES.length]);
 
-  // ── Show user dot (and center on first fix when not isolating) ──────────────
+  // ── Show user dot (auto-center only when no dish/place was requested) ────────
   useEffect(() => {
     if (!ready || !userCoord) return;
     run(`window.showUser(${userCoord.latitude},${userCoord.longitude})`);
-    if (!cuisineId) {
+    if (!cuisineId && paramLat === undefined) {
       run(`window.flyTo(${userCoord.latitude},${userCoord.longitude},14)`);
     }
   }, [ready, userCoord]);
+
+  // ── Center on a place when opened from Home (coords only, no dish) ───────────
+  useEffect(() => {
+    if (!ready || cuisineId) return;
+    if (paramLat !== undefined && paramLng !== undefined) {
+      run(`window.flyTo(${paramLat},${paramLng},14)`);
+    }
+  }, [ready, paramLat, paramLng]);
 
   // ── Isolate dish when coming from DishDetail ────────────────────────────────
   useEffect(() => {

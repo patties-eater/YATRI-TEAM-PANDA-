@@ -1,8 +1,3 @@
--- ============================================================================
--- YATRI — Supabase schema + seed
--- Run this in the Supabase dashboard → SQL Editor → New query → Run.
--- Safe to re-run: it drops and recreates the tables.
--- ============================================================================
 
 drop table if exists public.cuisine_locations cascade;
 drop table if exists public.cuisines cascade;
@@ -98,3 +93,76 @@ insert into public.cuisine_locations (id, cuisine_id, latitude, longitude, area)
 ('15b','15',27.6733,85.4308,'Dattatreya'),
 ('16a','16',27.7088,85.3106,'Asan'),
 ('16b','16',27.6920,85.3390,'Baneshwor');
+
+-- ── More dishes ─────────────────────────────────────────────────────────────
+insert into public.cuisines (id, name, description, category, diet, tags, accent, emoji, image, sort_order) values
+('17','Chow Mein','Stir-fried noodles tossed with vegetables, egg and tender strips of meat.','Street Food','Non Veg',array['Stir-fried','Popular'],'#C0622E','🍜','https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=400&q=80',17),
+('18','Laphing','Chilled, slippery mung-bean noodles drenched in fiery chilli sauce.','Street Food','Veg',array['Spicy','Cold'],'#B23A48','🌶️','https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=400&q=80',18),
+('19','Chatpate','Puffed rice tossed with spices, lemon and crunchy bits — a tangy street snack.','Street Food','Veg',array['Spicy','Tangy'],'#D08C2A','🥗','https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=400&q=80',19),
+('20','Samay Baji','A ceremonial Newari platter of beaten rice, meat, egg, beans and pickles.','Main Course','Non Veg',array['Newari','Festive'],'#4A6FA5','🍱','https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=400&q=80',20),
+('21','Kheer','Slow-cooked creamy rice pudding scented with cardamom and nuts.','Dessert','Veg',array['Sweet','Creamy'],'#D9A441','🍚','https://images.unsplash.com/photo-1612203985729-70726954388c?auto=format&fit=crop&w=400&q=80',21),
+('22','Sikarni','Thick spiced sweet yogurt whipped with dry fruits and cardamom.','Dessert','Veg',array['Sweet','Spiced'],'#C98A5E','🍨','https://images.unsplash.com/photo-1626200419199-391ae4be7a41?auto=format&fit=crop&w=400&q=80',22),
+('23','Sha Phaley','Crispy Tibetan bread pockets stuffed with seasoned minced meat.','Snack','Non Veg',array['Tibetan','Fried'],'#A85C32','🥟','https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=400&q=80',23),
+('24','Pulao','Aromatic spiced rice cooked with peas, nuts and warm whole spices.','Main Course','Veg',array['Aromatic','Festive'],'#C9A24B','🍛','https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=400&q=80',24),
+('25','Chukauni','Lalitpur-style potato salad folded into spiced creamy yogurt.','Side Dish','Veg',array['Tangy','Creamy'],'#B7A23E','🥔','https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=400&q=80',25),
+('26','Masala Chiya','Nepali spiced milk tea brewed with ginger, cardamom and cloves.','Snack','Veg',array['Warm','Spiced'],'#9C6B4E','🍵','https://images.unsplash.com/photo-1571934811356-5cc061b6821f?auto=format&fit=crop&w=400&q=80',26),
+('27','Khasi ko Masu','Slow-cooked goat curry in a rich, spicy Nepali gravy.','Curry','Non Veg',array['Spicy','Hearty'],'#8C3B2E','🍖','https://images.unsplash.com/photo-1631292784640-2b24be784d5d?auto=format&fit=crop&w=400&q=80',27),
+('28','Sandheko Wai Wai','Crunchy instant noodles tossed raw with onion, chilli and lemon.','Street Food','Veg',array['Spicy','Quick'],'#C0622E','🍜','https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=400&q=80',28),
+('29','Bhatmas Sandeko','Spiced soybean salad tossed with onion, chilli, ginger and mustard oil.','Snack','Veg',array['Crunchy','Savory'],'#6E7F4E','🫘','https://images.unsplash.com/photo-1547928576-b822bc410bdf?auto=format&fit=crop&w=400&q=80',29),
+('30','Phapar Roti','Rustic buckwheat pancake from the hills, served with chutney or honey.','Snack','Veg',array['Healthy','Rustic'],'#7A6A4F','🥞','https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=400&q=80',30);
+
+-- ── More locations (incl. new areas: Jhamsikhel, Lazimpat, Jawalakhel, Chabahil) ──
+insert into public.cuisine_locations (id, cuisine_id, latitude, longitude, area) values
+('17a','17',27.7154,85.3123,'Thamel'),
+('17b','17',27.6766,85.3074,'Jhamsikhel'),
+('18a','18',27.7215,85.3621,'Boudha'),
+('18b','18',27.7172,85.3470,'Chabahil'),
+('19a','19',27.7058,85.3138,'New Road'),
+('19b','19',27.7088,85.3106,'Asan'),
+('20a','20',27.6664,85.3247,'Patan'),
+('20b','20',27.6710,85.4297,'Bhaktapur'),
+('21a','21',27.7088,85.3106,'Asan'),
+('21b','21',27.6730,85.3120,'Jawalakhel'),
+('22a','22',27.6710,85.4297,'Bhaktapur'),
+('22b','22',27.6766,85.3074,'Jhamsikhel'),
+('23a','23',27.7215,85.3621,'Boudha'),
+('23b','23',27.7245,85.3206,'Lazimpat'),
+('24a','24',27.6922,85.3392,'Baneshwor'),
+('24b','24',27.7245,85.3206,'Lazimpat'),
+('25a','25',27.6664,85.3247,'Patan'),
+('25b','25',27.6730,85.3120,'Jawalakhel'),
+('26a','26',27.7154,85.3123,'Thamel'),
+('26b','26',27.7245,85.3206,'Lazimpat'),
+('27a','27',27.6922,85.3392,'Baneshwor'),
+('27b','27',27.6766,85.3074,'Jhamsikhel'),
+('28a','28',27.7058,85.3138,'New Road'),
+('28b','28',27.7172,85.3470,'Chabahil'),
+('29a','29',27.7088,85.3106,'Asan'),
+('29b','29',27.6779,85.2795,'Kirtipur'),
+('30a','30',27.6779,85.2795,'Kirtipur'),
+('30b','30',27.6766,85.3074,'Jhamsikhel');
+
+-- ── Real dish photos (Wikimedia Commons) — overrides generic stock images ────
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/a/a1/Momo_nepal.jpg' where id='1';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Dal_bhat.jpg/960px-Dal_bhat.jpg' where id='2';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/c/c0/Sel_Roti.jpg' where id='3';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/7/7f/Thukpa%2C_Tibetan_noodle_in_Osaka%2C_Japan.jpg' where id='4';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/e/e9/Meat_Chatamari.jpg' where id='5';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/e/e5/Yomari_double.jpg' where id='6';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/c/cd/Woh.jpg' where id='7';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/5/5f/Gundruk_NP.jpg' where id='8';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Kwati.jpg/960px-Kwati.jpg' where id='9';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Aalu_Bodi_Tama_3.jpg/960px-Aalu_Bodi_Tama_3.jpg' where id='10';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Sekuwa.jpg/960px-Sekuwa.jpg' where id='11';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/2/26/Choila.jpg' where id='12';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Sukuti.jpg/960px-Sukuti.jpg' where id='13';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/f/fe/Dhindo_by_Ganesh.jpeg' where id='14';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Juju_Dhau.jpg/960px-Juju_Dhau.jpg' where id='15';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Homemade_Chow_mein_with_shrimps_and_meat_with_a_choy_and_Choung.jpg/960px-Homemade_Chow_mein_with_shrimps_and_meat_with_a_choy_and_Choung.jpg' where id='17';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Laphing.jpg/960px-Laphing.jpg' where id='18';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Chatpate.jpg/960px-Chatpate.jpg' where id='19';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/4/46/Kheer.jpg' where id='21';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/d/dd/Afghan_Palo.jpg' where id='24';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Chukauni.jpg/960px-Chukauni.jpg' where id='25';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/8/89/Chai_In_Sakora.jpg' where id='26';
+update public.cuisines set image='https://upload.wikimedia.org/wikipedia/commons/9/9f/Curry_Goat_and_Rice.jpg' where id='27';
