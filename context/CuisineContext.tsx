@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { Alert } from 'react-native';
 import type { Cuisine } from '../cuisines';
 import FALLBACK_CUISINES from '../cuisines';
 import { fetchAllCuisines } from '../services/cuisineService';
@@ -33,11 +34,13 @@ export function CuisineProvider({ children }: { children: ReactNode }) {
         console.log(`[Cuisines] ✅ Supabase — ${data.length} dishes loaded`);
         setCuisines(data);
       } else {
-        console.warn('[Cuisines] ⚠️ Supabase returned 0 rows — using hardcoded fallback');
+        Alert.alert('Supabase', '⚠️ Connected but 0 rows returned. Check seed.sql was run.');
       }
     } catch (e: any) {
-      console.error('[Cuisines] ❌ Supabase error — using hardcoded fallback\n', e?.message);
-      setError(e?.message ?? 'Could not fetch cuisines');
+      const msg = e?.message ?? 'Unknown error';
+      console.error('[Cuisines] ❌', msg);
+      Alert.alert('Supabase Error', msg);
+      setError(msg);
     } finally {
       setLoading(false);
     }
