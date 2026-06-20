@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -46,13 +47,13 @@ function cuisinesFor(place: Place, all: Cuisine[]) {
 
 function PlaceCard({
   place,
-  dishCount,
+  dishes,
   active,
   onTap,
   onOpenMap,
 }: {
   place: Place;
-  dishCount: number;
+  dishes: Cuisine[];
   active: boolean;
   onTap: () => void;
   onOpenMap: () => void;
@@ -82,8 +83,8 @@ function PlaceCard({
   return (
     <View style={styles.placeRow}>
       <Animated.View style={[styles.swipeHint, { opacity: hintOpacity }]} pointerEvents="none">
-        <Ionicons name="map" size={16} color={colors.primary} />
-        <Text style={styles.swipeHintText}>Open in map</Text>
+        <Ionicons name="restaurant" size={16} color={colors.primary} />
+        <Text style={styles.swipeHintText}>View dishes</Text>
       </Animated.View>
 
       <Animated.View style={{ transform: [{ translateX: tx }] }} {...pan.panHandlers}>
@@ -97,7 +98,7 @@ function PlaceCard({
             <View style={styles.placeMetaCol}>
               <Text style={styles.placeName}>{place.name}</Text>
               <Text style={styles.placeCount}>
-                {dishCount} {dishCount === 1 ? 'dish' : 'dishes'}
+                {dishes.length} {dishes.length === 1 ? 'dish' : 'dishes'}
               </Text>
             </View>
             <View style={[styles.placeChevron, active && styles.placeChevronActive]}>
@@ -109,6 +110,22 @@ function PlaceCard({
             </View>
           </View>
           <Text style={styles.placeDesc} numberOfLines={1}>{place.description}</Text>
+
+          {dishes.length > 0 && (
+            <View style={styles.itemsRow}>
+              {dishes.slice(0, 6).map(d => (
+                <View key={d.id} style={styles.itemChip}>
+                  <Image source={{ uri: d.image }} style={styles.itemImg} />
+                  <Text style={styles.itemName} numberOfLines={1}>{d.name}</Text>
+                </View>
+              ))}
+              {dishes.length > 6 && (
+                <View style={styles.moreChip}>
+                  <Text style={styles.moreText}>+{dishes.length - 6}</Text>
+                </View>
+              )}
+            </View>
+          )}
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -196,8 +213,14 @@ export default function HomeScreen() {
     run(`window.flyTo(${PLACES[i].lat},${PLACES[i].lng})`);
   }
 
-  function openPlaceOnMap(p: Place) {
-    navigation.navigate('Map', { latitude: p.lat, longitude: p.lng });
+  function openPlacePage(p: Place) {
+    navigation.navigate('Place', {
+      name: p.name,
+      description: p.description,
+      lat: p.lat,
+      lng: p.lng,
+      areaKeys: p.areaKeys,
+    });
   }
 
   const q = query.trim().toLowerCase();
@@ -274,10 +297,10 @@ export default function HomeScreen() {
                 <PlaceCard
                   key={p.name}
                   place={p}
-                  dishCount={cuisinesFor(p, CUISINES).length}
+                  dishes={cuisinesFor(p, CUISINES)}
                   active={realIndex === idx}
                   onTap={() => selectPlace(realIndex)}
-                  onOpenMap={() => openPlaceOnMap(p)}
+                  onOpenMap={() => openPlacePage(p)}
                 />
               );
             })
@@ -387,6 +410,31 @@ const styles = StyleSheet.create({
   placeName: { fontSize: 16, fontWeight: '700', color: colors.text },
   placeCount: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   placeDesc: { fontSize: 12.5, color: colors.textMuted, lineHeight: 18 },
+
+  itemsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
+  itemChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.surface,
+    borderRadius: radius.pill,
+    paddingLeft: 3,
+    paddingRight: 10,
+    paddingVertical: 3,
+  },
+  itemImg: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.surface },
+  itemName: { fontSize: 12, fontWeight: '600', color: colors.text, maxWidth: 110 },
+  moreChip: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface + '88',
+    borderRadius: radius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  moreText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
 
   placeChevron: {
     width: 28, height: 28, borderRadius: 14,

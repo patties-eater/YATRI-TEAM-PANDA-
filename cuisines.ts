@@ -8,6 +8,8 @@ export type CuisineLocation = {
 
 export type Diet = 'Veg' | 'Non Veg';
 
+export type Authenticity = 'Indigenous' | 'Traditional' | 'Adopted';
+
 export type Cuisine = {
   id: string;
   name: string;
@@ -19,5 +21,9 @@ export type Cuisine = {
   emoji: string;
   image: string;
   featured?: boolean;
+  originPlace?: string;
+  originCulture?: string;
+  authenticity?: Authenticity;
+  heritage?: string;
   locations: CuisineLocation[];
 };
