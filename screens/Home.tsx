@@ -170,6 +170,9 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* ── Flexible body (map + card grow/shrink together) ── */}
+      <View style={styles.body}>
+
       {/* ── Mini map ── */}
       <View style={styles.mapWrap}>
         <WebView
@@ -256,6 +259,8 @@ export default function HomeScreen() {
         </View>
 
       </View>
+
+      </View>{/* body */}
     </SafeAreaView>
   );
 }
@@ -281,9 +286,15 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
 
+  body: {
+    flex: 1,
+    paddingBottom: 12,
+  },
+
   // Map
   mapWrap: {
-    height: 380,
+    flex: 1,
+    maxHeight: 420,
     marginHorizontal: 16,
     borderRadius: radius.lg,
     overflow: 'hidden',
@@ -308,8 +319,8 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.card,
     marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 4,
+    marginTop: 16,
+    marginBottom: 0,
     borderRadius: radius.lg,
     padding: 20,
     borderWidth: 1,
