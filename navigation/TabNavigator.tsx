@@ -12,7 +12,7 @@ import { colors, radius } from '../theme';
 
 export type TabParamList = {
   Home:    undefined;
-  Details: undefined;
+  Cuisine: undefined;
   Map:     { cuisineId?: string; latitude?: number; longitude?: number } | undefined;
   SOS:     undefined;
 };
@@ -26,7 +26,7 @@ const TAB_CONFIG: Record<
   { label: string; active: IoniconName; inactive: IoniconName }
 > = {
   Home:    { label: 'Home',    active: 'home',              inactive: 'home-outline' },
-  Details: { label: 'Details', active: 'information-circle', inactive: 'information-circle-outline' },
+  Cuisine: { label: 'Cuisine', active: 'information-circle', inactive: 'information-circle-outline' },
   Map:     { label: 'Map',     active: 'map',               inactive: 'map-outline' },
   SOS:     { label: 'SOS',     active: 'warning',           inactive: 'warning-outline' },
 };
@@ -62,7 +62,7 @@ export default function TabNavigator() {
       }}
     >
       <Tab.Screen name="Home"    component={HomeScreen} />
-      <Tab.Screen name="Details" component={DetailsScreen} />
+      <Tab.Screen name="Cuisine" component={DetailsScreen} />
       <Tab.Screen name="Map"     component={MapScreen} />
       <Tab.Screen name="SOS"     component={SOSScreen} />
     </Tab.Navigator>
