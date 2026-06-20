@@ -20,7 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { colors, radius, font, gradients } from '../theme';
-import CUISINES from '../cuisines';
+import { useCuisines } from '../context/CuisineContext';
 
 if (
   Platform.OS === 'android' &&
@@ -186,6 +186,7 @@ function DishCard({
 
 export default function DetailsScreen() {
   const navigation = useNavigation<any>();
+  const { cuisines } = useCuisines();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
 
@@ -210,7 +211,7 @@ export default function DetailsScreen() {
     }).start();
   }, []);
 
-  const filtered = CUISINES.filter(c => {
+  const filtered = cuisines.filter(c => {
     const matchCat =
       category === 'All' ||
       c.category === category ||

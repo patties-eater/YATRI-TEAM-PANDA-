@@ -8,7 +8,8 @@ import * as Location from 'expo-location';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import CUISINES, { type Cuisine, type CuisineLocation } from '../cuisines';
+import { type Cuisine, type CuisineLocation } from '../cuisines';
+import { useCuisines } from '../context/CuisineContext';
 import { type TabParamList } from '../navigation/TabNavigator';
 import { colors, radius } from '../theme';
 
@@ -97,6 +98,7 @@ const MAP_HTML = `<!DOCTYPE html>
 </html>`;
 
 export default function MapScreen() {
+  const { cuisines: CUISINES } = useCuisines();
   const navRoute = useRoute<RouteProp<TabParamList, 'Map'>>();
   const insets   = useSafeAreaInsets();
   const webRef   = useRef<WebView>(null);
@@ -472,7 +474,7 @@ const styles = StyleSheet.create({
   map:  { flex: 1 },
 
   loading: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.card,

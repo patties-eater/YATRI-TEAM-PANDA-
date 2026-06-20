@@ -8,6 +8,14 @@
     "ios": {
       "supportsTablet": true
     },
-    "web": {}
+    "web": {},
+    "extra": {
+      "eas": {
+        "projectId": "3d61d4e8-60fb-44f9-b00f-a13c1fd9f3a3"
+      }
+    },
+    "android": {
+      "package": "com.prajjwal_gautam12.yatri"
+    }
   }
 }

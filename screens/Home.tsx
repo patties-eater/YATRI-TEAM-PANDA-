@@ -13,7 +13,8 @@ import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { colors, radius } from '../theme';
-import CUISINES from '../cuisines';
+import type { Cuisine } from '../cuisines';
+import { useCuisines } from '../context/CuisineContext';
 
 // ─── Places ──────────────────────────────────────────────────────────────────
 type Place = {
@@ -70,8 +71,8 @@ const PLACES: Place[] = [
   },
 ];
 
-function cuisinesFor(place: Place) {
-  return CUISINES.filter(c =>
+function cuisinesFor(cuisines: Cuisine[], place: Place) {
+  return cuisines.filter(c =>
     c.locations.some(l => place.areaKeys.includes(l.area))
   );
 }
@@ -120,25 +121,27 @@ const MINI_MAP_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const FOOD_MARKERS = CUISINES.flatMap(c =>
-  c.locations.map(loc => ({
-    lat: loc.latitude,
-    lng: loc.longitude,
-    accent: c.accent,
-    image: c.image,
-  })),
-);
 
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
+  const { cuisines: allCuisines } = useCuisines();
   const webRef     = useRef<WebView>(null);
   const [ready, setReady] = useState(false);
   const [idx, setIdx] = useState(0);
 
   const place    = PLACES[idx];
-  const cuisines = cuisinesFor(place);
+  const cuisines = cuisinesFor(allCuisines, place);
+
+  const FOOD_MARKERS = allCuisines.flatMap(c =>
+    c.locations.map(loc => ({
+      lat: loc.latitude,
+      lng: loc.longitude,
+      accent: c.accent,
+      image: c.image,
+    })),
+  );
 
   // Responsive map height — scales with the screen, clamped to sane bounds.
   const { height } = useWindowDimensions();

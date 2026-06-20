@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { NotificationProvider } from './components/Notification';
+import { CuisineProvider } from './context/CuisineContext';
 import RootNavigator from './navigation/RootNavigator';
 import { font } from './theme';
 
@@ -41,12 +42,14 @@ try { patchJsxRuntime(require('react/jsx-dev-runtime')); } catch {}
 export default function App() {
   return (
     <SafeAreaProvider>
-      <NotificationProvider>
-        <StatusBar style="dark" />
-        <NavigationContainer>
-          <RootNavigator />
-        </NavigationContainer>
-      </NotificationProvider>
+      <CuisineProvider>
+        <NotificationProvider>
+          <StatusBar style="dark" />
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+        </NotificationProvider>
+      </CuisineProvider>
     </SafeAreaProvider>
   );
 }
