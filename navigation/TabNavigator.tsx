@@ -28,7 +28,7 @@ const TAB_CONFIG: Record<
   Home: { label: 'Home', active: 'home', inactive: 'home-outline' },
   Cuisine: { label: 'Cuisine', active: 'restaurant', inactive: 'restaurant-outline' },
   Map: { label: 'Map', active: 'map', inactive: 'map-outline' },
-  SOS: { label: 'SOS', active: 'warning', inactive: 'warning-outline' },
+  SOS: { label: 'SOS', active: 'shield', inactive: 'shield-outline' },
 };
 
 export default function TabNavigator() {
