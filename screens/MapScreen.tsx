@@ -120,7 +120,6 @@ export default function MapScreen() {
                 onPress={() => handleChipPress(cat.label)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.chipEmoji}>{cat.emoji}</Text>
                 <Text style={[styles.chipText, active && styles.chipTextActive]}>
                   {cat.label}
                 </Text>
