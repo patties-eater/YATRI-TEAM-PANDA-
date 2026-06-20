@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { colors, radius } from '../theme';
 import { useCuisines } from '../data/cuisines';
+import { dishImageSource, dishImageUri } from '../data/dishImages';
 import type { Cuisine } from '../cuisines';
 
 type Place = {
@@ -110,7 +111,7 @@ function PlaceCard({
             <View style={styles.itemsRow}>
               {dishes.slice(0, 6).map(d => (
                 <View key={d.id} style={styles.itemChip}>
-                  <Image source={{ uri: d.image }} style={styles.itemImg} />
+                  <Image source={dishImageSource(d.id, d.image)} style={styles.itemImg} />
                   <Text style={styles.itemName} numberOfLines={1}>{d.name}</Text>
                 </View>
               ))}
@@ -182,7 +183,7 @@ export default function HomeScreen() {
       lat: loc.latitude,
       lng: loc.longitude,
       accent: c.accent,
-      image: c.image,
+      image: dishImageUri(c.id, c.image),
     })),
   );
 

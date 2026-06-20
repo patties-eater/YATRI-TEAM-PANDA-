@@ -9,6 +9,7 @@ import { useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useCuisines } from '../data/cuisines';
+import { dishImageSource, dishImageUri } from '../data/dishImages';
 import { type Cuisine, type CuisineLocation } from '../cuisines';
 import { type TabParamList } from '../navigation/TabNavigator';
 import { colors, radius } from '../theme';
@@ -141,7 +142,7 @@ export default function MapScreen() {
         locId: loc.id,
         lat: loc.latitude,
         lng: loc.longitude,
-        image: c.image,
+        image: dishImageUri(c.id, c.image),
         accent: c.accent,
       })),
     );
@@ -373,7 +374,7 @@ export default function MapScreen() {
         <Animated.View style={[styles.panel, { bottom: insets.bottom + 16, transform: [{ translateY: panelY }] }]}>
           <View style={styles.panelHandle} />
           <View style={styles.panelRow}>
-            <Image source={{ uri: selected.cuisine.image }} style={styles.panelImg} />
+            <Image source={dishImageSource(selected.cuisine.id, selected.cuisine.image)} style={styles.panelImg} />
             <View style={styles.panelInfo}>
               <Text style={styles.panelName}>{selected.cuisine.name}</Text>
               <View style={[styles.panelBadge, { backgroundColor: selected.cuisine.accent + '22' }]}>

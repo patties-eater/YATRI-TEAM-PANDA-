@@ -13,6 +13,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, radius } from '../theme';
 import { useCuisines } from '../data/cuisines';
+import { dishImageSource } from '../data/dishImages';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Place'>;
@@ -65,7 +66,7 @@ export default function PlaceScreen() {
               activeOpacity={0.85}
               onPress={() => openOnMap(d.id)}
             >
-              <Image source={{ uri: d.image }} style={styles.img} />
+              <Image source={dishImageSource(d.id, d.image)} style={styles.img} />
               <View style={styles.info}>
                 <Text style={styles.name} numberOfLines={1}>{d.name}</Text>
                 <Text style={styles.meta} numberOfLines={1}>

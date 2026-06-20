@@ -22,6 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { colors, radius, font, gradients } from '../theme';
 import { useCuisines } from '../data/cuisines';
+import { dishImageSource } from '../data/dishImages';
 
 if (
   Platform.OS === 'android' &&
@@ -128,7 +129,7 @@ function DishCard({
       >
         <View style={styles.imgWrap}>
           <Image
-            source={{ uri: item.image }}
+            source={dishImageSource(item.id, item.image)}
             style={styles.img}
             resizeMode="cover"
           />

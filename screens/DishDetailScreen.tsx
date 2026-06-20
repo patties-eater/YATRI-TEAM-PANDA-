@@ -12,6 +12,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, radius } from '../theme';
 import { useCuisines } from '../data/cuisines';
+import { dishImageSource } from '../data/dishImages';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'DishDetail'>;
@@ -56,7 +57,7 @@ export default function DishDetailScreen() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         
         <View style={styles.hero}>
-          <Image source={{ uri: dish.image }} style={styles.heroImg} />
+          <Image source={dishImageSource(dish.id, dish.image)} style={styles.heroImg} resizeMode="cover" />
           <View style={[styles.emojiBadge, { backgroundColor: dish.accent }]}>
             <Text style={styles.emojiBadgeText}>{dish.emoji}</Text>
           </View>
