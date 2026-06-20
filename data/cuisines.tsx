@@ -35,7 +35,7 @@ type Row = {
   authenticity: Cuisine['authenticity'] | null;
   heritage: string | null;
   cuisine_locations:
-    | { id: string; latitude: number; longitude: number; area: string }[]
+    | { id: string; latitude: number; longitude: number; area: string; is_origin: boolean | null }[]
     | null;
 };
 
@@ -60,6 +60,7 @@ function mapRow(r: Row): Cuisine {
       latitude: l.latitude,
       longitude: l.longitude,
       area: l.area,
+      isOrigin: l.is_origin ?? false,
     })),
   };
 }
@@ -77,7 +78,7 @@ export function CuisinesProvider({ children }: { children: ReactNode }) {
       .select(
         'id,name,description,category,diet,tags,accent,emoji,image,featured,' +
           'origin_place,origin_culture,authenticity,heritage,' +
-          'cuisine_locations(id,latitude,longitude,area)',
+          'cuisine_locations(id,latitude,longitude,area,is_origin)',
       )
       .order('featured', { ascending: false })
       .order('sort_order', { ascending: true });

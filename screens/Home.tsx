@@ -29,20 +29,15 @@ type Place = {
 };
 
 const PLACES: Place[] = [
-  { name: 'Bhaktapur',  lat: 27.6710, lng: 85.4297, description: 'Ancient Newari city famed for Juju Dhau, sel roti and kwati.', emoji: '🏛️', areaKeys: ['Bhaktapur'] },
-  { name: 'Thamel',     lat: 27.7154, lng: 85.3123, description: "Kathmandu's liveliest hub — steaming momos on every corner.", emoji: '🏘️', areaKeys: ['Thamel'] },
-  { name: 'Patan',      lat: 27.6664, lng: 85.3247, description: 'UNESCO heritage city with authentic Newari bara and chatamari.', emoji: '🕌', areaKeys: ['Patan', 'Patan Durbar'] },
-  { name: 'Boudha',     lat: 27.7215, lng: 85.3621, description: 'Tibetan quarter famous for hearty thukpa and butter tea.', emoji: '🔵', areaKeys: ['Boudha'] },
-  { name: 'Asan Bazaar',lat: 27.7088, lng: 85.3106, description: 'Old Kathmandu market brimming with dal bhat and kwati stalls.', emoji: '🛒', areaKeys: ['Asan'] },
-  { name: 'Kirtipur',   lat: 27.6779, lng: 85.2795, description: 'Hilltop Newari town known for crispy sel roti and local snacks.', emoji: '⛰️', areaKeys: ['Kirtipur'] },
-  { name: 'Jhamsikhel', lat: 27.6766, lng: 85.3074, description: "Lalitpur's trendy food street — chow mein, sikarni and café culture.", emoji: '🍢', areaKeys: ['Jhamsikhel'] },
-  { name: 'Lazimpat',   lat: 27.7245, lng: 85.3206, description: 'Leafy diplomatic strip lined with tea houses and Tibetan bites.', emoji: '🍵', areaKeys: ['Lazimpat'] },
-  { name: 'Jawalakhel', lat: 27.6730, lng: 85.3120, description: 'Patan neighbourhood loved for creamy kheer and chukauni.', emoji: '🍚', areaKeys: ['Jawalakhel'] },
-  { name: 'Chabahil',   lat: 27.7172, lng: 85.3470, description: 'Busy junction near Boudha famous for fiery laphing.', emoji: '🌶️', areaKeys: ['Chabahil'] },
+  { name: 'Bhaktapur',  lat: 27.6722, lng: 85.4298, description: 'Medieval Newar city — home of Juju Dhau and Yomari.', emoji: '🏛️', areaKeys: ['Bhaktapur'] },
+  { name: 'Patan',      lat: 27.6726, lng: 85.3239, description: 'City of artisans and authentic Newari feast food.', emoji: '🕌', areaKeys: ['Patan', 'Patan Durbar'] },
+  { name: 'Basantapur', lat: 27.7042, lng: 85.3070, description: 'Old Kathmandu Durbar quarter — heart of Newari street food.', emoji: '🏯', areaKeys: ['Basantapur'] },
 ];
 
 function cuisinesFor(place: Place, all: Cuisine[]) {
-  return all.filter(c => c.locations.some(l => place.areaKeys.includes(l.area)));
+  return all.filter(c =>
+    c.locations.some(l => l.isOrigin && place.areaKeys.includes(l.area)),
+  );
 }
 
 function PlaceCard({
@@ -224,14 +219,16 @@ export default function HomeScreen() {
   }
 
   const q = query.trim().toLowerCase();
-  const filteredPlaces = q
-    ? PLACES.filter(
-        p =>
-          p.name.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q) ||
-          cuisinesFor(p, CUISINES).some(c => c.name.toLowerCase().includes(q)),
-      )
-    : PLACES;
+  const filteredPlaces = PLACES.filter(p => {
+    const hasDishes = CUISINES.length === 0 || cuisinesFor(p, CUISINES).length > 0;
+    if (!hasDishes) return false;
+    if (!q) return true;
+    return (
+      p.name.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      cuisinesFor(p, CUISINES).some(c => c.name.toLowerCase().includes(q))
+    );
+  });
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>

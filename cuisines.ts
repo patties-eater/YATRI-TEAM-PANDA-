@@ -4,6 +4,7 @@ export type CuisineLocation = {
   latitude: number;
   longitude: number;
   area: string;
+  isOrigin?: boolean;
 };
 
 export type Diet = 'Veg' | 'Non Veg';
