@@ -1,13 +1,13 @@
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.REACT_APP_SUPABASE_URL;
+const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_KEY ?? process.env.REACT_APP_SUPABASE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   console.warn(
-    '[supabase] Missing EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_KEY. ' +
-      'Check your .env file and restart with `expo start -c`.',
+    '[supabase] Missing Expo/Supabase environment variables. ' +
+      'Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_KEY in .env, then restart with `expo start -c`.',
   );
 }
 

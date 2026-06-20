@@ -243,7 +243,7 @@ export default function DetailsScreen() {
     >
       <View style={styles.header}>
         <Text style={styles.title}>Local Cuisine</Text>
-        <Text style={styles.subtitle}>Explore Nepal's finest dishes</Text>
+        
       </View>
 
       <View style={styles.searchWrap}>
