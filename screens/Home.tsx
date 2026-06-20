@@ -13,7 +13,8 @@ import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { colors, radius } from '../theme';
-import CUISINES from '../cuisines';
+import { useCuisines } from '../data/cuisines';
+import type { Cuisine } from '../cuisines';
 
 // ─── Places ──────────────────────────────────────────────────────────────────
 type Place = {
@@ -70,8 +71,8 @@ const PLACES: Place[] = [
   },
 ];
 
-function cuisinesFor(place: Place) {
-  return CUISINES.filter(c =>
+function cuisinesFor(place: Place, all: Cuisine[]) {
+  return all.filter(c =>
     c.locations.some(l => place.areaKeys.includes(l.area))
   );
 }
@@ -120,25 +121,25 @@ const MINI_MAP_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const FOOD_MARKERS = CUISINES.flatMap(c =>
-  c.locations.map(loc => ({
-    lat: loc.latitude,
-    lng: loc.longitude,
-    accent: c.accent,
-    image: c.image,
-  })),
-);
-
-
 // ─── Screen ───────────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
+  const { cuisines: CUISINES } = useCuisines();
   const webRef     = useRef<WebView>(null);
   const [ready, setReady] = useState(false);
   const [idx, setIdx] = useState(0);
 
   const place    = PLACES[idx];
-  const cuisines = cuisinesFor(place);
+  const cuisines = cuisinesFor(place, CUISINES);
+
+  const FOOD_MARKERS = CUISINES.flatMap(c =>
+    c.locations.map(loc => ({
+      lat: loc.latitude,
+      lng: loc.longitude,
+      accent: c.accent,
+      image: c.image,
+    })),
+  );
 
   // Responsive map height — scales with the screen, clamped to sane bounds.
   const { height } = useWindowDimensions();
@@ -146,12 +147,13 @@ export default function HomeScreen() {
 
   const run = (js: string) => webRef.current?.injectJavaScript(js + ';true;');
 
-  // Draw all food markers + center on the first place once the map is ready.
+  // Draw all food markers once the map is ready AND data has loaded; re-runs
+  // when the Supabase data arrives.
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || FOOD_MARKERS.length === 0) return;
     run(`window.renderMarkers(${JSON.stringify(FOOD_MARKERS)})`);
     run(`window.flyTo(${PLACES[idx].lat},${PLACES[idx].lng})`);
-  }, [ready]);
+  }, [ready, CUISINES.length]);
 
   function onMessage(e: WebViewMessageEvent) {
     try {

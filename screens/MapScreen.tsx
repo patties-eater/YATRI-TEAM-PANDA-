@@ -8,7 +8,8 @@ import * as Location from 'expo-location';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import CUISINES, { type Cuisine, type CuisineLocation } from '../cuisines';
+import { useCuisines } from '../data/cuisines';
+import { type Cuisine, type CuisineLocation } from '../cuisines';
 import { type TabParamList } from '../navigation/TabNavigator';
 import { colors, radius } from '../theme';
 
@@ -100,6 +101,7 @@ export default function MapScreen() {
   const navRoute = useRoute<RouteProp<TabParamList, 'Map'>>();
   const insets   = useSafeAreaInsets();
   const webRef   = useRef<WebView>(null);
+  const { cuisines: CUISINES } = useCuisines();
 
   const cuisineId = navRoute.params?.cuisineId;
   const paramLat  = navRoute.params?.latitude;
@@ -152,7 +154,7 @@ export default function MapScreen() {
       })),
     );
     run(`window.renderMarkers(${JSON.stringify(data)})`);
-  }, [ready, filterCat, isolating, cuisineId]);
+  }, [ready, filterCat, isolating, cuisineId, CUISINES.length]);
 
   // ── Show user dot (and center on first fix when not isolating) ──────────────
   useEffect(() => {
@@ -472,7 +474,8 @@ const styles = StyleSheet.create({
   map:  { flex: 1 },
 
   loading: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.card,

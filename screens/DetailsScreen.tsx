@@ -14,13 +14,14 @@ import {
   Platform,
   UIManager,
   useWindowDimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { colors, radius, font, gradients } from '../theme';
-import CUISINES from '../cuisines';
+import { useCuisines } from '../data/cuisines';
 
 if (
   Platform.OS === 'android' &&
@@ -186,6 +187,7 @@ function DishCard({
 
 export default function DetailsScreen() {
   const navigation = useNavigation<any>();
+  const { cuisines: CUISINES, loading, error } = useCuisines();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
 
@@ -329,13 +331,26 @@ export default function DetailsScreen() {
         ListHeaderComponent={ListHeader}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="search-outline" size={40} color={colors.surface} />
-            <Text style={styles.emptyTitle}>No dishes found</Text>
-            <Text style={styles.emptySubtitle}>
-              Try a different search or category
-            </Text>
-          </View>
+          loading ? (
+            <View style={styles.empty}>
+              <ActivityIndicator color={colors.primary} />
+              <Text style={styles.emptySubtitle}>Loading dishes…</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.empty}>
+              <Ionicons name="cloud-offline-outline" size={40} color={colors.surface} />
+              <Text style={styles.emptyTitle}>Couldn't load dishes</Text>
+              <Text style={styles.emptySubtitle}>{error}</Text>
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <Ionicons name="search-outline" size={40} color={colors.surface} />
+              <Text style={styles.emptyTitle}>No dishes found</Text>
+              <Text style={styles.emptySubtitle}>
+                Try a different search or category
+              </Text>
+            </View>
+          )
         }
         renderItem={({ item, index }) => (
           <DishCard
