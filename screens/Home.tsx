@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  PanResponder,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -129,9 +128,6 @@ export default function HomeScreen() {
   const [ready, setReady] = useState(false);
   const [idx, setIdx] = useState(0);
 
-  const place    = PLACES[idx];
-  const cuisines = cuisinesFor(place, CUISINES);
-
   const FOOD_MARKERS = CUISINES.flatMap(c =>
     c.locations.map(loc => ({
       lat: loc.latitude,
@@ -161,27 +157,11 @@ export default function HomeScreen() {
     } catch {}
   }
 
-  function go(dir: 1 | -1) {
-    setIdx(prev => {
-      const next = (prev + dir + PLACES.length) % PLACES.length;
-      run(`window.flyTo(${PLACES[next].lat},${PLACES[next].lng})`);
-      return next;
-    });
+  // Tap a place in the list to fly the map preview there.
+  function selectPlace(i: number) {
+    setIdx(i);
+    run(`window.flyTo(${PLACES[i].lat},${PLACES[i].lng})`);
   }
-
-  // Swipe the card left / right to move between places.
-  const goRef = useRef(go);
-  goRef.current = go;
-  const pan = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) =>
-        Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
-      onPanResponderRelease: (_, g) => {
-        if (g.dx <= -40) goRef.current(1);
-        else if (g.dx >= 40) goRef.current(-1);
-      },
-    }),
-  ).current;
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -229,65 +209,40 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ── Place card (swipe left / right to change place) ── */}
-      <View style={styles.card} {...pan.panHandlers}>
-
-        {/* Place title row */}
-        <View style={styles.placeRow}>
-          <View style={styles.placeMeta}>
-            <Text style={styles.placeName}>{place.name}</Text>
-            <View style={styles.countPill}>
-              <Ionicons name="restaurant-outline" size={11} color={colors.primary} />
-              <Text style={styles.countText}>{cuisines.length} dishes here</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Description */}
-        <Text style={styles.placeDesc}>{place.description}</Text>
-
-        {/* Cuisine chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chips}
-        >
-          {cuisines.length > 0
-            ? cuisines.map(c => (
-                <View key={c.id} style={[styles.chip, { backgroundColor: c.accent + '1A' }]}>
-                  <Text style={[styles.chipLabel, { color: c.accent }]}>{c.name}</Text>
+      {/* ── All places, listed ── */}
+      <ScrollView
+        style={styles.placeListWrap}
+        contentContainerStyle={styles.placeList}
+        showsVerticalScrollIndicator={false}
+      >
+        {PLACES.map((p, i) => {
+          const active = i === idx;
+          const list = cuisinesFor(p, CUISINES);
+          return (
+            <TouchableOpacity
+              key={p.name}
+              style={[styles.placeCard, active && styles.placeCardActive]}
+              onPress={() => selectPlace(i)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.placeCardHead}>
+                <View style={styles.placeMetaCol}>
+                  <Text style={styles.placeName}>{p.name}</Text>
+                  <Text style={styles.placeCount}>
+                    {list.length} {list.length === 1 ? 'dish' : 'dishes'}
+                  </Text>
                 </View>
-              ))
-            : (
-                <Text style={styles.noCuisine}>No listings yet for this area</Text>
-              )}
-        </ScrollView>
-
-        {/* Divider */}
-        <View style={styles.divider} />
-
-        {/* Page dots + CTA */}
-        <View style={styles.bottomRow}>
-          <View style={styles.dotsGroup}>
-            {PLACES.map((_, i) => (
-              <View
-                key={i}
-                style={[styles.pageDot, i === idx && styles.pageDotActive]}
-              />
-            ))}
-          </View>
-
-          <TouchableOpacity
-            style={styles.viewBtn}
-            onPress={() => navigation.navigate('Map')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.viewBtnText}>View cuisines</Text>
-            <Ionicons name="arrow-forward" size={14} color="#fff" />
-          </TouchableOpacity>
-        </View>
-
-      </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={active ? colors.primary : colors.textMuted}
+                />
+              </View>
+              <Text style={styles.placeDesc} numberOfLines={1}>{p.description}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
       </View>{/* body */}
     </SafeAreaView>
@@ -342,69 +297,32 @@ const styles = StyleSheet.create({
   },
   expandText: { fontSize: 11, color: '#fff', fontWeight: '600' },
 
-  // Card
-  card: {
+  // Place list
+  placeListWrap: { flex: 1, marginTop: 12 },
+  placeList: { paddingHorizontal: 16, paddingBottom: 16, gap: 12 },
+
+  placeCard: {
     backgroundColor: colors.card,
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 0,
-    borderRadius: radius.lg,
-    padding: 20,
+    borderRadius: radius.md,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderWidth: 1,
     borderColor: colors.surface,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
-    gap: 14,
+    gap: 4,
   },
-
-  placeRow:   { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  placeMeta:  { flex: 1, gap: 5 },
-  placeName:  { fontSize: 20, fontWeight: '800', color: colors.text },
-  countPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    alignSelf: 'flex-start',
-    backgroundColor: colors.secondary + '33',
-    borderRadius: radius.pill,
-    paddingHorizontal: 9, paddingVertical: 3,
+  placeCardActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '0D',
   },
-  countText: { fontSize: 11, fontWeight: '700', color: colors.primary },
-
-  placeDesc: { fontSize: 13, color: colors.textMuted, lineHeight: 20 },
-
-  chips:      { gap: 8, paddingRight: 4 },
-  chip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    borderRadius: radius.pill,
-    paddingHorizontal: 12, paddingVertical: 7,
-  },
-  chipLabel: { fontSize: 12, fontWeight: '700' },
-  noCuisine: { fontSize: 13, color: colors.textMuted, fontStyle: 'italic' },
-
-  divider: { height: 1, backgroundColor: colors.surface },
-
-  bottomRow: {
+  placeCardHead: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 12,
   },
-  dotsGroup: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  pageDot: {
-    width: 7, height: 7, borderRadius: 4,
-    backgroundColor: colors.surface,
-  },
-  pageDotActive: {
-    width: 18,
-    backgroundColor: colors.primary,
-  },
+  placeMetaCol: { flex: 1 },
 
-  viewBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 7,
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingHorizontal: 18, paddingVertical: 11,
-  },
-  viewBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  placeName: { fontSize: 16, fontWeight: '700', color: colors.text },
+  placeCount: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  placeDesc: { fontSize: 12.5, color: colors.textMuted, lineHeight: 18 },
 });
