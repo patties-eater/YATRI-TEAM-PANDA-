@@ -72,14 +72,15 @@ export default function TabNavigator() {
 
 const styles = StyleSheet.create({
   bar: {
-    height: Platform.OS === 'ios' ? 92 : 78, // Slightly elevated to allow circles to sit comfortably
+    height: Platform.OS === 'ios' ? 88 : 74, // Made compact and uniform
     backgroundColor: colors.background,
-    borderTopWidth: 1,
-    borderTopColor: colors.surface,
-    paddingTop: 4,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 6,
-    elevation: 0,
-    shadowOpacity: 0,
+    borderTopWidth: 0,                       // Removes the top border line
+    position: 'absolute',                   // FIXED: Places bar on top of screen content
+    bottom: 0,
+    left: 0,
+    right: 0,
+    elevation: 0,                            // Removes Android shadow bar
+    shadowOpacity: 0,                        // Removes iOS shadow bar
   },
   item: {
     alignItems: 'center',
