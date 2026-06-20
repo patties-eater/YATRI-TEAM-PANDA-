@@ -104,6 +104,7 @@ const CUISINE_DATA = JSON.stringify(
     id:          c.id,
     name:        c.name,
     emoji:       c.emoji,
+    image:       c.image,
     accent:      c.accent,
     category:    c.category,
     description: c.description,
@@ -241,13 +242,15 @@ const MAP_HTML = `<!DOCTYPE html>
     }
     c.locations.forEach(function(loc){
       var icon=L.divIcon({
-        html:'<div style="width:38px;height:38px;background:#fff;border-radius:50%;'
-          +'display:flex;align-items:center;justify-content:center;font-size:19px;'
-          +'box-shadow:0 2px 8px rgba(0,0,0,.22);border:2.5px solid '+c.accent+';">'
-          +c.emoji+'</div>',
-        iconSize:[38,38],iconAnchor:[19,19],className:'',
+        html:'<div style="width:42px;height:42px;border-radius:50%;overflow:hidden;'
+          +'box-shadow:0 2px 10px rgba(0,0,0,.28);border:3px solid '+c.accent+';">'
+          +'<img src="'+c.image+'" style="width:100%;height:100%;object-fit:cover;" />'
+          +'</div>',
+        iconSize:[42,42],iconAnchor:[21,21],className:'',
       });
-      var pop='<div class="pn">'+c.emoji+'  '+c.name+'</div>'
+      var pop='<div style="margin:-1px -1px 10px;border-radius:10px 10px 0 0;overflow:hidden;height:96px;">'
+          +'<img src="'+c.image+'" style="width:100%;height:100%;object-fit:cover;" /></div>'
+        +'<div class="pn">'+c.name+'</div>'
         +'<div class="pc">'+c.category+'</div>'
         +'<div class="pa">&#128205; '+loc.area+'</div>'
         +'<div class="pd">'+c.description+'</div>'
