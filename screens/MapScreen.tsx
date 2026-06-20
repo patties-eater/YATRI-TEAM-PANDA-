@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   View, StyleSheet, ScrollView, TouchableOpacity,
-  Text, Image, Animated,
+  Text, Image, Animated, ActivityIndicator,
 } from 'react-native';
-import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from 'react-native-maps';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,8 +11,6 @@ import { Ionicons } from '@expo/vector-icons';
 import CUISINES, { type Cuisine, type CuisineLocation } from '../cuisines';
 import { type TabParamList } from '../navigation/TabNavigator';
 import { colors, radius } from '../theme';
-
-const KATHMANDU = { latitude: 27.7172, longitude: 85.324, latitudeDelta: 0.08, longitudeDelta: 0.08 };
 
 const CATEGORIES = [
   'All', 'Street Food', 'Main Course', 'Snack',
@@ -22,123 +20,199 @@ const CATEGORIES = [
 type Selected = { cuisine: Cuisine; location: CuisineLocation };
 type LatLng   = { latitude: number; longitude: number };
 
+// Leaflet + OpenStreetMap map (no API key required). Talks to RN through
+// window.ReactNativeWebView.postMessage and injected JS function calls.
+const MAP_HTML = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  html, body, #map { height: 100%; margin: 0; padding: 0; background: #e8e4dd; }
+  .pin { width: 40px; height: 40px; border-radius: 20px; border: 3px solid #fff;
+         overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.3); background:#fff; }
+  .pin img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .leaflet-control-attribution { font-size: 9px; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+  function post(o){ if(window.ReactNativeWebView){ window.ReactNativeWebView.postMessage(JSON.stringify(o)); } }
+  var map = L.map('map', { zoomControl:false }).setView([27.7172, 85.324], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+
+  var markers = L.layerGroup().addTo(map);
+  var routeLine = null, userDot = null;
+
+  window.renderMarkers = function(list){
+    markers.clearLayers();
+    list.forEach(function(m){
+      var icon = L.divIcon({
+        className: '',
+        html: '<div class="pin" style="border-color:'+m.accent+'"><img src="'+m.image+'"/></div>',
+        iconSize: [40,40], iconAnchor: [20,20]
+      });
+      L.marker([m.lat, m.lng], { icon: icon }).addTo(markers)
+        .on('click', function(){ post({ type:'marker', cuisineId:m.cuisineId, locId:m.locId }); });
+    });
+  };
+  window.flyTo = function(lat,lng,z){ map.flyTo([lat,lng], z||15, { duration:0.8 }); };
+  window.showUser = function(lat,lng){
+    if(userDot){ map.removeLayer(userDot); }
+    userDot = L.circleMarker([lat,lng], { radius:7, weight:3, color:'#fff', fillColor:'#2D6A9F', fillOpacity:1 }).addTo(map);
+  };
+  window.drawRoute = function(coords){
+    if(routeLine){ map.removeLayer(routeLine); }
+    routeLine = L.polyline(coords, { color:'#2D6A9F', weight:5 }).addTo(map);
+    map.fitBounds(routeLine.getBounds(), { padding:[70,70] });
+  };
+  window.clearRoute = function(){ if(routeLine){ map.removeLayer(routeLine); routeLine = null; } };
+
+  map.on('click', function(){ post({ type:'mapPress' }); });
+  post({ type:'ready' });
+</script>
+</body>
+</html>`;
+
 export default function MapScreen() {
-  const navRoute  = useRoute<RouteProp<TabParamList, 'Map'>>();
-  const insets    = useSafeAreaInsets();
-  const mapRef    = useRef<MapView>(null);
+  const navRoute = useRoute<RouteProp<TabParamList, 'Map'>>();
+  const insets   = useSafeAreaInsets();
+  const webRef   = useRef<WebView>(null);
 
   const cuisineId = navRoute.params?.cuisineId;
-  const [filterCat,   setFilterCat]   = useState('All');
-  const [isolating,   setIsolating]   = useState(false);
-  const [userCoord,   setUserCoord]   = useState<LatLng | null>(null);
-  const [selected,    setSelected]    = useState<Selected | null>(null);
-  const [routeCoords, setRouteCoords] = useState<LatLng[]>([]);
+  const [ready,     setReady]     = useState(false);
+  const [filterCat, setFilterCat] = useState('All');
+  const [isolating, setIsolating] = useState(false);
+  const [userCoord, setUserCoord] = useState<LatLng | null>(null);
+  const [selected,  setSelected]  = useState<Selected | null>(null);
   const panelY = useRef(new Animated.Value(320)).current;
 
-  // ── Location ──────────────────────────────────────────────────────────────
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      const coord = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-      setUserCoord(coord);
-      mapRef.current?.animateToRegion({ ...coord, latitudeDelta: 0.05, longitudeDelta: 0.05 }, 800);
-    })();
-  }, []);
+  const run = (js: string) => webRef.current?.injectJavaScript(js + ';true;');
 
-  // ── Category filter — runs first so isolation below always wins ───────────
-  useEffect(() => {
-    if (!isolating) setRouteCoords([]);
-  }, [filterCat, isolating]);
-
-  // ── Isolate dish when coming from DishDetail ─────────────────────────────
-  useEffect(() => {
-    if (!cuisineId) return;
-    setIsolating(true);
-    const cuisine = CUISINES.find(c => c.id === cuisineId);
-    if (!cuisine?.locations.length) return;
-    const loc = cuisine.locations[0];
-    mapRef.current?.animateToRegion(
-      { latitude: loc.latitude, longitude: loc.longitude, latitudeDelta: 0.015, longitudeDelta: 0.015 },
-      1000,
-    );
-    setTimeout(() => openPanel({ cuisine, location: loc }), 900);
-  }, [cuisineId]);
-
-  // ── Panel helpers ─────────────────────────────────────────────────────────
-  function openPanel(item: Selected) {
-    setRouteCoords([]);
-    setSelected(item);
-    Animated.spring(panelY, { toValue: 0, useNativeDriver: true, speed: 18, bounciness: 4 }).start();
-  }
-
-  function closePanel() {
-    Animated.spring(panelY, { toValue: 320, useNativeDriver: true, speed: 25, bounciness: 0 })
-      .start(() => { setSelected(null); setRouteCoords([]); });
-  }
-
-  // ── Directions via OSRM ───────────────────────────────────────────────────
-  async function getDirections() {
-    if (!selected || !userCoord) return;
-    const { location } = selected;
-    try {
-      const res  = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/` +
-        `${userCoord.longitude},${userCoord.latitude};` +
-        `${location.longitude},${location.latitude}` +
-        `?overview=full&geometries=geojson`
-      );
-      const data = await res.json();
-      if (!data.routes?.[0]) return;
-      const coords: LatLng[] = data.routes[0].geometry.coordinates.map(
-        ([lng, lat]: number[]) => ({ latitude: lat, longitude: lng })
-      );
-      setRouteCoords(coords);
-      mapRef.current?.fitToCoordinates(coords, {
-        edgePadding: { top: 100, right: 40, bottom: 340, left: 40 },
-        animated: true,
-      });
-    } catch {}
-  }
-
-  // ── Visible markers ───────────────────────────────────────────────────────
+  // ── Visible markers ─────────────────────────────────────────────────────────
   const visibleCuisines = isolating && cuisineId
     ? CUISINES.filter(c => c.id === cuisineId)
     : filterCat === 'All'
     ? CUISINES
     : CUISINES.filter(c => c.category === filterCat);
 
+  // ── Location ────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      setUserCoord({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+    })();
+  }, []);
+
+  // ── Push markers whenever the filter / data changes ─────────────────────────
+  useEffect(() => {
+    if (!ready) return;
+    const data = visibleCuisines.flatMap(c =>
+      c.locations.map(loc => ({
+        cuisineId: c.id,
+        locId: loc.id,
+        lat: loc.latitude,
+        lng: loc.longitude,
+        image: c.image,
+        accent: c.accent,
+      })),
+    );
+    run(`window.renderMarkers(${JSON.stringify(data)})`);
+  }, [ready, filterCat, isolating, cuisineId]);
+
+  // ── Show user dot (and center on first fix when not isolating) ──────────────
+  useEffect(() => {
+    if (!ready || !userCoord) return;
+    run(`window.showUser(${userCoord.latitude},${userCoord.longitude})`);
+    if (!cuisineId) {
+      run(`window.flyTo(${userCoord.latitude},${userCoord.longitude},14)`);
+    }
+  }, [ready, userCoord]);
+
+  // ── Isolate dish when coming from DishDetail ────────────────────────────────
+  useEffect(() => {
+    if (!ready || !cuisineId) return;
+    setIsolating(true);
+    const cuisine = CUISINES.find(c => c.id === cuisineId);
+    const loc = cuisine?.locations[0];
+    if (!cuisine || !loc) return;
+    run(`window.flyTo(${loc.latitude},${loc.longitude},16)`);
+    const t = setTimeout(() => openPanel({ cuisine, location: loc }), 700);
+    return () => clearTimeout(t);
+  }, [ready, cuisineId]);
+
+  // ── WebView messages ────────────────────────────────────────────────────────
+  function onMessage(e: WebViewMessageEvent) {
+    let msg: any;
+    try { msg = JSON.parse(e.nativeEvent.data); } catch { return; }
+    if (msg.type === 'ready') {
+      setReady(true);
+    } else if (msg.type === 'marker') {
+      const cuisine = CUISINES.find(c => c.id === msg.cuisineId);
+      const location = cuisine?.locations.find(l => l.id === msg.locId);
+      if (cuisine && location) openPanel({ cuisine, location });
+    } else if (msg.type === 'mapPress') {
+      if (selected) closePanel();
+    }
+  }
+
+  // ── Panel helpers ───────────────────────────────────────────────────────────
+  function openPanel(item: Selected) {
+    run('window.clearRoute()');
+    setSelected(item);
+    Animated.spring(panelY, { toValue: 0, useNativeDriver: true, speed: 18, bounciness: 4 }).start();
+  }
+
+  function closePanel() {
+    run('window.clearRoute()');
+    Animated.spring(panelY, { toValue: 320, useNativeDriver: true, speed: 25, bounciness: 0 })
+      .start(() => setSelected(null));
+  }
+
+  // ── Directions via OSRM ─────────────────────────────────────────────────────
+  async function getDirections() {
+    if (!selected || !userCoord) return;
+    const { location } = selected;
+    try {
+      const res = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/` +
+        `${userCoord.longitude},${userCoord.latitude};` +
+        `${location.longitude},${location.latitude}` +
+        `?overview=full&geometries=geojson`,
+      );
+      const data = await res.json();
+      if (!data.routes?.[0]) return;
+      const coords = data.routes[0].geometry.coordinates.map(
+        ([lng, lat]: number[]) => [lat, lng],
+      );
+      run(`window.drawRoute(${JSON.stringify(coords)})`);
+    } catch {}
+  }
+
   return (
     <View style={styles.root}>
-      <MapView
-        ref={mapRef}
+      <WebView
+        ref={webRef}
+        source={{ html: MAP_HTML }}
         style={styles.map}
-        provider={PROVIDER_DEFAULT}
-        initialRegion={KATHMANDU}
-        showsUserLocation
-        showsMyLocationButton={false}
-        onPress={() => selected && closePanel()}
-      >
-        {routeCoords.length > 0 && (
-          <Polyline coordinates={routeCoords} strokeColor="#2D6A9F" strokeWidth={4} />
+        originWhitelist={['*']}
+        javaScriptEnabled
+        domStorageEnabled
+        onMessage={onMessage}
+        startInLoadingState
+        renderLoading={() => (
+          <View style={styles.loading}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
         )}
-
-        {visibleCuisines.flatMap(c =>
-          c.locations.map(loc => (
-            <Marker
-              key={loc.id}
-              coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
-              tracksViewChanges={false}
-              onPress={() => openPanel({ cuisine: c, location: loc })}
-            >
-              <View style={[styles.markerRing, { borderColor: c.accent }]}>
-                <Image source={{ uri: c.image }} style={styles.markerImg} />
-              </View>
-            </Marker>
-          ))
-        )}
-      </MapView>
+      />
 
       {/* Category chips */}
       <View style={[styles.filterBar, { top: insets.top + 8 }]}>
@@ -163,9 +237,7 @@ export default function MapScreen() {
       <TouchableOpacity
         style={[styles.locateBtn, { bottom: insets.bottom + 24 }]}
         onPress={() => {
-          if (userCoord) mapRef.current?.animateToRegion(
-            { ...userCoord, latitudeDelta: 0.01, longitudeDelta: 0.01 }, 800
-          );
+          if (userCoord) run(`window.flyTo(${userCoord.latitude},${userCoord.longitude},15)`);
         }}
         activeOpacity={0.85}
       >
@@ -208,18 +280,12 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   map:  { flex: 1 },
 
-  markerRing: {
-    width: 42, height: 42,
-    borderRadius: 21,
-    borderWidth: 3,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 4,
+  loading: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.card,
   },
-  markerImg: { width: '100%', height: '100%' },
 
   filterBar: {
     position: 'absolute',

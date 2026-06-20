@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { colors, radius } from '../theme';
@@ -74,23 +74,74 @@ function cuisinesFor(place: Place) {
   );
 }
 
+// Leaflet + OpenStreetMap preview (no API key). Interaction is disabled — the
+// RN overlay on top intercepts taps to open the full map.
+const MINI_MAP_HTML = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style> html, body, #map { height:100%; margin:0; padding:0; background:#e8e4dd; } </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+  function post(o){ if(window.ReactNativeWebView){ window.ReactNativeWebView.postMessage(JSON.stringify(o)); } }
+  var map = L.map('map', {
+    zoomControl:false, attributionControl:false,
+    dragging:false, scrollWheelZoom:false, doubleClickZoom:false,
+    boxZoom:false, keyboard:false, tap:false, touchZoom:false
+  }).setView([27.7172, 85.324], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
+  var dots = L.layerGroup().addTo(map);
+  window.renderDots = function(list){
+    dots.clearLayers();
+    list.forEach(function(d){
+      L.circleMarker([d.lat, d.lng], { radius:6, weight:2.5, color:d.accent, fillColor:'#fff', fillOpacity:1 }).addTo(dots);
+    });
+  };
+  window.flyTo = function(lat,lng){ map.setView([lat,lng], 14, { animate:true }); };
+  post({ type:'ready' });
+</script>
+</body>
+</html>`;
+
+const DOT_DATA = CUISINES.flatMap(c =>
+  c.locations.map(loc => ({ lat: loc.latitude, lng: loc.longitude, accent: c.accent })),
+);
+
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
-  const mapRef     = useRef<MapView>(null);
+  const webRef     = useRef<WebView>(null);
+  const [ready, setReady] = useState(false);
   const [idx, setIdx] = useState(0);
 
   const place    = PLACES[idx];
   const cuisines = cuisinesFor(place);
 
+  const run = (js: string) => webRef.current?.injectJavaScript(js + ';true;');
+
+  // Draw all dots + center on the first place once the map is ready.
+  useEffect(() => {
+    if (!ready) return;
+    run(`window.renderDots(${JSON.stringify(DOT_DATA)})`);
+    run(`window.flyTo(${PLACES[idx].lat},${PLACES[idx].lng})`);
+  }, [ready]);
+
+  function onMessage(e: WebViewMessageEvent) {
+    try {
+      if (JSON.parse(e.nativeEvent.data)?.type === 'ready') setReady(true);
+    } catch {}
+  }
+
   function go(dir: 1 | -1) {
     const next = (idx + dir + PLACES.length) % PLACES.length;
     setIdx(next);
-    mapRef.current?.animateToRegion(
-      { latitude: PLACES[next].lat, longitude: PLACES[next].lng, latitudeDelta: 0.02, longitudeDelta: 0.02 },
-      600,
-    );
+    run(`window.flyTo(${PLACES[next].lat},${PLACES[next].lng})`);
   }
 
   return (
@@ -116,31 +167,16 @@ export default function HomeScreen() {
 
       {/* ── Mini map ── */}
       <View style={styles.mapWrap}>
-        <MapView
-          ref={mapRef}
+        <WebView
+          ref={webRef}
+          source={{ html: MINI_MAP_HTML }}
           style={styles.miniMap}
-          provider={PROVIDER_DEFAULT}
-          initialRegion={{ latitude: PLACES[0].lat, longitude: PLACES[0].lng, latitudeDelta: 0.02, longitudeDelta: 0.02 }}
+          originWhitelist={['*']}
+          javaScriptEnabled
           scrollEnabled={false}
-          zoomEnabled={false}
-          rotateEnabled={false}
-          pitchEnabled={false}
-          showsUserLocation={false}
-          showsMyLocationButton={false}
-          toolbarEnabled={false}
-        >
-          {CUISINES.flatMap(c =>
-            c.locations.map(loc => (
-              <Marker
-                key={loc.id}
-                coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
-                tracksViewChanges={false}
-              >
-                <View style={[styles.dot, { borderColor: c.accent }]} />
-              </Marker>
-            ))
-          )}
-        </MapView>
+          onMessage={onMessage}
+          pointerEvents="none"
+        />
         {/* Tap overlay — intercepts all touches */}
         <TouchableOpacity
           style={StyleSheet.absoluteFill}
