@@ -209,11 +209,13 @@ export default function HomeScreen() {
 
   // Bouncing "scroll for more" arrow
   const bounce = useRef(new Animated.Value(0)).current;
-  const [showArrow, setShowArrow] = useState(false);
+  const [atBottom, setAtBottom] = useState(false);
+  const listRef = useRef<ScrollView>(null);
+  const scrollY = useRef(0);
   const listLayoutH = useRef(0);
-  const listContentH = useRef(0);
-  function recalcArrow() {
-    setShowArrow(listContentH.current > listLayoutH.current + 8);
+  function scrollDown() {
+    const next = scrollY.current + Math.max(listLayoutH.current * 0.8, 220);
+    listRef.current?.scrollTo({ y: next, animated: true });
   }
   useEffect(() => {
     const loop = Animated.loop(
@@ -324,17 +326,17 @@ export default function HomeScreen() {
         </View>
 
         <ScrollView
+          ref={listRef}
           style={styles.placeListWrap}
           contentContainerStyle={styles.placeList}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           scrollEventThrottle={16}
-          onLayout={e => { listLayoutH.current = e.nativeEvent.layout.height; recalcArrow(); }}
-          onContentSizeChange={(_w, h) => { listContentH.current = h; recalcArrow(); }}
+          onLayout={e => { listLayoutH.current = e.nativeEvent.layout.height; }}
           onScroll={e => {
             const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
-            const nearBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 24;
-            setShowArrow(contentSize.height > layoutMeasurement.height + 8 && !nearBottom);
+            scrollY.current = contentOffset.y;
+            setAtBottom(contentOffset.y + layoutMeasurement.height >= contentSize.height - 24);
           }}
         >
           {filteredPlaces.length === 0 ? (
@@ -353,11 +355,17 @@ export default function HomeScreen() {
           )}
         </ScrollView>
 
-        {showArrow && (
-          <View style={styles.scrollArrowWrap} pointerEvents="none">
-            <Animated.View style={[styles.scrollArrow, { transform: [{ translateY: bounce }] }]}>
-              <Ionicons name="chevron-down" size={20} color={colors.primary} />
-            </Animated.View>
+        {filteredPlaces.length > 1 && !atBottom && (
+          <View style={styles.scrollArrowWrap} pointerEvents="box-none">
+            <TouchableOpacity
+              style={styles.scrollArrow}
+              onPress={scrollDown}
+              activeOpacity={0.85}
+            >
+              <Animated.View style={{ transform: [{ translateY: bounce }] }}>
+                <Ionicons name="chevron-down" size={22} color="#fff" />
+              </Animated.View>
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -509,15 +517,14 @@ const styles = StyleSheet.create({
 
   scrollArrowWrap: {
     position: 'absolute',
-    left: 0, right: 0, bottom: 8,
+    left: 0, right: 0, bottom: 12,
     alignItems: 'center',
   },
   scrollArrow: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: colors.card,
-    borderWidth: 1, borderColor: colors.surface,
+    width: 42, height: 42, borderRadius: 21,
+    backgroundColor: colors.primary,
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 }, elevation: 4,
+    shadowColor: '#000', shadowOpacity: 0.22, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 }, elevation: 6,
   },
 });
