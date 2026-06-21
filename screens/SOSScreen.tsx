@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
 },
 
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14 },
-  title: { fontSize: 26, fontWeight: '800', color: colors.text, letterSpacing: -0.5 },
+  title: { fontSize: 26, fontWeight: '800', color: colors.primary, letterSpacing: -0.5 },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
 
   sosWrapper: { alignItems: 'center', paddingVertical: 36, position: 'relative' },

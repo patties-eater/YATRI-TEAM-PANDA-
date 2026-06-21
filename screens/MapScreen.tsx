@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.surface,
   },
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
-  title:    { fontSize: 26, fontWeight: '800', color: colors.text, letterSpacing: -0.5 },
+  title:    { fontSize: 26, fontWeight: '800', color: colors.primary, letterSpacing: -0.5 },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
 
   filterContent: { paddingHorizontal: 16, gap: 8 },

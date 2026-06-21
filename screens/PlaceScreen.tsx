@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   headerText: { flex: 1 },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text, letterSpacing: -0.5 },
+  title: { fontSize: 24, fontWeight: '800', color: colors.primary, letterSpacing: -0.5 },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
 
   list: { paddingHorizontal: 16, paddingBottom: 28, gap: 12 },

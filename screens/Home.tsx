@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 14,
   },
-  title: { fontSize: 26, fontWeight: '800', color: colors.text, letterSpacing: -0.5 },
+  title: { fontSize: 26, fontWeight: '800', color: colors.primary, letterSpacing: -0.5 },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
 
   body: { flex: 1, paddingBottom: 12 },

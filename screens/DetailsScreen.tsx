@@ -244,7 +244,7 @@ export default function DetailsScreen() {
     >
       <View style={styles.header}>
         <Text style={styles.title}>Local Cuisine</Text>
-        
+        <Text style={styles.subtitle}>Authentic dishes of the Kathmandu Valley</Text>
       </View>
 
       <View style={styles.searchWrap}>
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: '800',
-    color: colors.text,
+    color: colors.primary,
     letterSpacing: -0.5,
   },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
