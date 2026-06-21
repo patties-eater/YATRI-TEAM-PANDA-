@@ -246,6 +246,29 @@ export default function MapScreen() {
     }
   }
 
+  // Fast "my location": jump to last-known position instantly, then refine.
+  async function locateMe() {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Location unavailable', 'Enable location access to center the map on your position.');
+      return;
+    }
+    try {
+      const last = await Location.getLastKnownPositionAsync();
+      if (last) {
+        const c = { latitude: last.coords.latitude, longitude: last.coords.longitude };
+        setUserCoord(c);
+        run(`window.showUser(${c.latitude},${c.longitude});window.flyTo(${c.latitude},${c.longitude},16)`);
+      }
+    } catch {}
+    try {
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const c = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+      setUserCoord(c);
+      run(`window.showUser(${c.latitude},${c.longitude});window.flyTo(${c.latitude},${c.longitude},16)`);
+    } catch {}
+  }
+
   async function getDirections() {
     if (!selected || routing) return;
     const dest = selected.location;
@@ -380,20 +403,16 @@ export default function MapScreen() {
           {
             bottom:
               selected && !navigating
-                ? insets.bottom + 210
+                ? insets.bottom + 232
                 : navigating
-                ? insets.bottom + 96
+                ? insets.bottom + 100
                 : insets.bottom + 24,
           },
         ]}
-        onPress={async () => {
-          const c = await ensureOrigin();
-          if (c) run(`window.showUser(${c.latitude},${c.longitude});window.flyTo(${c.latitude},${c.longitude},15)`);
-          else Alert.alert('Location unavailable', 'Enable location access to center the map on your position.');
-        }}
+        onPress={locateMe}
         activeOpacity={0.85}
       >
-        <Ionicons name="locate" size={24} color="#fff" />
+        <Ionicons name="locate" size={24} color="#4285F4" />
       </TouchableOpacity>
 
       {selected && !navigating && (
@@ -534,13 +553,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     zIndex: 30,
-    width: 54, height: 54,
-    borderRadius: radius.pill,
-    backgroundColor: colors.primary,
+    width: 46, height: 46,
+    borderRadius: 23,
+    backgroundColor: '#fff',
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: '#fff',
-    shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 }, elevation: 12,
+    shadowColor: '#000', shadowOpacity: 0.22, shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 }, elevation: 6,
   },
 
   panel: {
