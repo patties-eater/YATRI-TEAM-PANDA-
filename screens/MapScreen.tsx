@@ -45,9 +45,11 @@ const MAP_HTML = `<!DOCTYPE html>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   html, body, #map { height: 100%; margin: 0; padding: 0; background: #e8e4dd; }
-  .pin { width: 40px; height: 40px; border-radius: 20px; border: 3px solid #fff;
-         overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.3); background:#fff; }
-  .pin img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pin { width: 42px; height: 42px; border: 3px solid #fff; background:#fff;
+         border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+         box-shadow: 0 3px 6px rgba(0,0,0,.4); overflow: hidden; }
+  .pin img { width: 100%; height: 100%; object-fit: cover; display: block;
+             transform: rotate(45deg) scale(1.45); }
   .leaflet-control-attribution { font-size: 9px; }
 </style>
 </head>
@@ -69,7 +71,7 @@ const MAP_HTML = `<!DOCTYPE html>
       var icon = L.divIcon({
         className: '',
         html: '<div class="pin" style="border-color:'+m.accent+'"><img src="'+m.image+'"/></div>',
-        iconSize: [40,40], iconAnchor: [20,20]
+        iconSize: [42,42], iconAnchor: [21,42]
       });
       L.marker([m.lat, m.lng], { icon: icon }).addTo(markers)
         .on('click', function(){ post({ type:'marker', cuisineId:m.cuisineId, locId:m.locId }); });

@@ -10,6 +10,7 @@ import {
   Animated,
   Easing,
   PanResponder,
+  ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -167,9 +168,11 @@ const MINI_MAP_HTML = `<!DOCTYPE html>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   html, body, #map { height:100%; margin:0; padding:0; background:#e8e4dd; }
-  .pin { width:30px; height:30px; border-radius:15px; border:2.5px solid #fff;
-         overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.35); background:#fff; }
-  .pin img { width:100%; height:100%; object-fit:cover; display:block; }
+  .pin { width:34px; height:34px; border:2.5px solid #fff; background:#fff;
+         border-radius:50% 50% 50% 0; transform: rotate(-45deg);
+         box-shadow:0 2px 5px rgba(0,0,0,.4); overflow:hidden; }
+  .pin img { width:100%; height:100%; object-fit:cover; display:block;
+             transform: rotate(45deg) scale(1.45); }
 </style>
 </head>
 <body>
@@ -189,7 +192,7 @@ const MINI_MAP_HTML = `<!DOCTYPE html>
       var icon = L.divIcon({
         className: '',
         html: '<div class="pin" style="border-color:'+d.accent+'"><img src="'+d.image+'"/></div>',
-        iconSize: [30,30], iconAnchor: [15,15]
+        iconSize: [34,34], iconAnchor: [17,34]
       });
       L.marker([d.lat, d.lng], { icon: icon }).addTo(foods);
     });
@@ -202,7 +205,7 @@ const MINI_MAP_HTML = `<!DOCTYPE html>
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
-  const { cuisines: CUISINES } = useCuisines();
+  const { cuisines: CUISINES, loading, error } = useCuisines();
   const webRef = useRef<WebView>(null);
   const [ready, setReady] = useState(false);
   const [query, setQuery] = useState('');
@@ -266,8 +269,7 @@ export default function HomeScreen() {
 
   const q = query.trim().toLowerCase();
   const filteredPlaces = PLACES.filter(p => {
-    const hasDishes = CUISINES.length === 0 || cuisinesFor(p, CUISINES).length > 0;
-    if (!hasDishes) return false;
+    if (cuisinesFor(p, CUISINES).length === 0) return false;
     if (!q) return true;
     return (
       p.name.toLowerCase().includes(q) ||
@@ -339,7 +341,14 @@ export default function HomeScreen() {
             setAtBottom(contentOffset.y + layoutMeasurement.height >= contentSize.height - 24);
           }}
         >
-          {filteredPlaces.length === 0 ? (
+          {loading && CUISINES.length === 0 ? (
+            <View style={styles.statusBox}>
+              <ActivityIndicator color={colors.primary} />
+              <Text style={styles.noMatch}>Loading places…</Text>
+            </View>
+          ) : error ? (
+            <Text style={styles.noMatch}>Couldn't load food: {error}</Text>
+          ) : filteredPlaces.length === 0 ? (
             <Text style={styles.noMatch}>No places match “{query}”.</Text>
           ) : (
             filteredPlaces.map(p => (
@@ -508,6 +517,7 @@ const styles = StyleSheet.create({
   },
   placeChevronActive: { backgroundColor: colors.primary },
 
+  statusBox: { alignItems: 'center', gap: 10, paddingVertical: 28 },
   noMatch: {
     textAlign: 'center',
     color: colors.textMuted,
