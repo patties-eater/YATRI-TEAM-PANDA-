@@ -1,10 +1,12 @@
-import { Text, TextInput } from 'react-native';
+import { useState } from 'react';
+import { Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { NotificationProvider } from './components/Notification';
 import { CuisinesProvider } from './data/cuisines';
+import SplashScreen from './components/SplashScreen';
 import RootNavigator from './navigation/RootNavigator';
 import { font } from './theme';
 
@@ -33,14 +35,19 @@ try { patchJsxRuntime(require('react/jsx-runtime')); } catch {}
 try { patchJsxRuntime(require('react/jsx-dev-runtime')); } catch {}
 
 export default function App() {
+  const [splashDone, setSplashDone] = useState(false);
+
   return (
     <SafeAreaProvider>
       <NotificationProvider>
         <CuisinesProvider>
-          <StatusBar style="dark" />
-          <NavigationContainer>
-            <RootNavigator />
-          </NavigationContainer>
+          <StatusBar style={splashDone ? 'dark' : 'light'} />
+          <View style={{ flex: 1 }}>
+            <NavigationContainer>
+              <RootNavigator />
+            </NavigationContainer>
+            {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
+          </View>
         </CuisinesProvider>
       </NotificationProvider>
     </SafeAreaProvider>

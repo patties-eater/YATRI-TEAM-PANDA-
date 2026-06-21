@@ -94,11 +94,11 @@ function PlaceCard({
   const pan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) =>
-        g.dx > 10 && Math.abs(g.dx) > Math.abs(g.dy) * 1.2,
-      onPanResponderMove: (_, g) => tx.setValue(Math.max(0, Math.min(g.dx, 130))),
+        g.dx < -10 && Math.abs(g.dx) > Math.abs(g.dy) * 1.2,
+      onPanResponderMove: (_, g) => tx.setValue(Math.min(0, Math.max(g.dx, -130))),
       onPanResponderRelease: (_, g) => {
         Animated.spring(tx, { toValue: 0, useNativeDriver: true, bounciness: 6 }).start();
-        if (g.dx > 100) onOpenMap();
+        if (g.dx < -100) onOpenMap();
       },
       onPanResponderTerminate: () =>
         Animated.spring(tx, { toValue: 0, useNativeDriver: true }).start(),
@@ -106,8 +106,8 @@ function PlaceCard({
   ).current;
 
   const hintOpacity = tx.interpolate({
-    inputRange: [0, 70],
-    outputRange: [0, 1],
+    inputRange: [-70, 0],
+    outputRange: [1, 0],
     extrapolate: 'clamp',
   });
 
@@ -206,6 +206,25 @@ export default function HomeScreen() {
   const webRef = useRef<WebView>(null);
   const [ready, setReady] = useState(false);
   const [query, setQuery] = useState('');
+
+  // Bouncing "scroll for more" arrow
+  const bounce = useRef(new Animated.Value(0)).current;
+  const [showArrow, setShowArrow] = useState(false);
+  const listLayoutH = useRef(0);
+  const listContentH = useRef(0);
+  function recalcArrow() {
+    setShowArrow(listContentH.current > listLayoutH.current + 8);
+  }
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(bounce, { toValue: 6, duration: 550, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(bounce, { toValue: 0, duration: 550, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
 
   const FOOD_MARKERS = CUISINES.flatMap(c =>
     c.locations.map(loc => ({
@@ -309,6 +328,14 @@ export default function HomeScreen() {
           contentContainerStyle={styles.placeList}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={16}
+          onLayout={e => { listLayoutH.current = e.nativeEvent.layout.height; recalcArrow(); }}
+          onContentSizeChange={(_w, h) => { listContentH.current = h; recalcArrow(); }}
+          onScroll={e => {
+            const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+            const nearBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 24;
+            setShowArrow(contentSize.height > layoutMeasurement.height + 8 && !nearBottom);
+          }}
         >
           {filteredPlaces.length === 0 ? (
             <Text style={styles.noMatch}>No places match “{query}”.</Text>
@@ -325,6 +352,14 @@ export default function HomeScreen() {
             ))
           )}
         </ScrollView>
+
+        {showArrow && (
+          <View style={styles.scrollArrowWrap} pointerEvents="none">
+            <Animated.View style={[styles.scrollArrow, { transform: [{ translateY: bounce }] }]}>
+              <Ionicons name="chevron-down" size={20} color={colors.primary} />
+            </Animated.View>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -392,8 +427,9 @@ const styles = StyleSheet.create({
     top: 0, left: 0, right: 0, bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: 6,
-    paddingLeft: 20,
+    paddingRight: 20,
     backgroundColor: colors.primary + '14',
     borderRadius: radius.md,
   },
@@ -469,5 +505,19 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
     paddingVertical: 28,
+  },
+
+  scrollArrowWrap: {
+    position: 'absolute',
+    left: 0, right: 0, bottom: 8,
+    alignItems: 'center',
+  },
+  scrollArrow: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: colors.card,
+    borderWidth: 1, borderColor: colors.surface,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 }, elevation: 4,
   },
 });
