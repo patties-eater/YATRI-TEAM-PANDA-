@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Speech from 'expo-speech';
@@ -26,6 +27,7 @@ export default function DishDetailScreen() {
   const { getCuisine } = useCuisines();
   const dish = getCuisine(params.cuisineId);
   const [speaking, setSpeaking] = useState(false);
+  const [showFull, setShowFull] = useState(false);
 
   // Stop any narration when leaving the screen.
   useEffect(() => () => { Speech.stop(); }, []);
@@ -60,19 +62,25 @@ export default function DishDetailScreen() {
       setSpeaking(false);
       return;
     }
-    const parts = [
-      dish!.name,
-      dish!.description,
-      dish!.whyFamous,
-      dish!.story,
-    ].filter(Boolean);
-    Speech.speak(parts.join('. '), {
-      rate: 0.95,
-      onDone: () => setSpeaking(false),
-      onStopped: () => setSpeaking(false),
-      onError: () => setSpeaking(false),
-    });
-    setSpeaking(true);
+    const body = showFull && dish!.storyLong ? dish!.storyLong : dish!.story;
+    const parts = [dish!.name, dish!.description, dish!.whyFamous, body].filter(Boolean);
+    const text = parts.join('. ');
+    try {
+      Speech.stop();
+      Speech.speak(text, {
+        rate: 0.95,
+        onDone: () => setSpeaking(false),
+        onStopped: () => setSpeaking(false),
+        onError: () => {
+          setSpeaking(false);
+          Alert.alert('Voice unavailable', 'Text-to-speech is not available on this device.');
+        },
+      });
+      setSpeaking(true);
+    } catch {
+      setSpeaking(false);
+      Alert.alert('Voice unavailable', 'Text-to-speech is not available on this device.');
+    }
   }
 
   return (
@@ -135,10 +143,28 @@ export default function DishDetailScreen() {
           </View>
         ) : null}
 
-        {dish.story ? (
+        {(dish.story || dish.storyLong) ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>The story</Text>
-            <Text style={styles.description}>{dish.story}</Text>
+            <Text style={styles.description}>
+              {showFull && dish.storyLong ? dish.storyLong : dish.story ?? dish.storyLong}
+            </Text>
+            {dish.storyLong && dish.story ? (
+              <TouchableOpacity
+                style={styles.moreLink}
+                onPress={() => setShowFull(v => !v)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.moreLinkText}>
+                  {showFull ? 'Show summary' : 'Read full story'}
+                </Text>
+                <Ionicons
+                  name={showFull ? 'chevron-up' : 'chevron-down'}
+                  size={14}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+            ) : null}
           </View>
         ) : null}
 
@@ -285,6 +311,14 @@ const styles = StyleSheet.create({
   listenBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   listenText: { fontSize: 12, fontWeight: '700', color: colors.primary },
   listenTextActive: { color: '#fff' },
+
+  moreLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+  },
+  moreLinkText: { fontSize: 13, fontWeight: '700', color: colors.primary },
 
   sectionTitle: { fontSize: 15, fontWeight: '700' },
 
