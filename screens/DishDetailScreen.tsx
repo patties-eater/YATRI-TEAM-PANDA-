@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +8,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -23,6 +25,10 @@ export default function DishDetailScreen() {
   const { params } = useRoute<Route>();
   const { getCuisine } = useCuisines();
   const dish = getCuisine(params.cuisineId);
+  const [speaking, setSpeaking] = useState(false);
+
+  // Stop any narration when leaving the screen.
+  useEffect(() => () => { Speech.stop(); }, []);
 
   if (!dish) {
     return (
@@ -46,6 +52,27 @@ export default function DishDetailScreen() {
         longitude: lng,
       },
     });
+  }
+
+  function toggleSpeak() {
+    if (speaking) {
+      Speech.stop();
+      setSpeaking(false);
+      return;
+    }
+    const parts = [
+      dish!.name,
+      dish!.description,
+      dish!.whyFamous,
+      dish!.story,
+    ].filter(Boolean);
+    Speech.speak(parts.join('. '), {
+      rate: 0.95,
+      onDone: () => setSpeaking(false),
+      onStopped: () => setSpeaking(false),
+      onError: () => setSpeaking(false),
+    });
+    setSpeaking(true);
   }
 
   return (
@@ -81,9 +108,39 @@ export default function DishDetailScreen() {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionTitle}>About</Text>
+            <TouchableOpacity
+              style={[styles.listenBtn, speaking && styles.listenBtnActive]}
+              onPress={toggleSpeak}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name={speaking ? 'stop' : 'volume-high'}
+                size={14}
+                color={speaking ? '#fff' : colors.primary}
+              />
+              <Text style={[styles.listenText, speaking && styles.listenTextActive]}>
+                {speaking ? 'Stop' : 'Listen'}
+              </Text>
+            </TouchableOpacity>
+          </View>
           <Text style={styles.description}>{dish.description}</Text>
         </View>
+
+        {dish.whyFamous ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Why it's famous</Text>
+            <Text style={styles.description}>{dish.whyFamous}</Text>
+          </View>
+        ) : null}
+
+        {dish.story ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>The story</Text>
+            <Text style={styles.description}>{dish.story}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
@@ -208,6 +265,26 @@ const styles = StyleSheet.create({
   tagText: { fontSize: 12, color: colors.textMuted },
 
   section: { paddingHorizontal: 16, marginBottom: 20 },
+
+  sectionHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  listenBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: radius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  listenBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  listenText: { fontSize: 12, fontWeight: '700', color: colors.primary },
+  listenTextActive: { color: '#fff' },
 
   sectionTitle: { fontSize: 15, fontWeight: '700' },
 

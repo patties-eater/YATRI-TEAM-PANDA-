@@ -244,7 +244,7 @@ export default function DetailsScreen() {
     >
       <View style={styles.header}>
         <Text style={styles.title}>Local Cuisine</Text>
-        <Text style={styles.subtitle}>Authentic dishes of the Kathmandu Valley</Text>
+        <Text style={styles.subtitle}>Discover Authentic dishes</Text>
       </View>
 
       <View style={styles.searchWrap}>

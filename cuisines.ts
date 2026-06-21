@@ -26,5 +26,8 @@ export type Cuisine = {
   originCulture?: string;
   authenticity?: Authenticity;
   heritage?: string;
+  whyFamous?: string;
+  story?: string;
+  whereToFind?: string;
   locations: CuisineLocation[];
 };

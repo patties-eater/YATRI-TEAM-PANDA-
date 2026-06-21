@@ -34,6 +34,9 @@ type Row = {
   origin_culture: string | null;
   authenticity: Cuisine['authenticity'] | null;
   heritage: string | null;
+  why_famous: string | null;
+  story: string | null;
+  where_to_find: string | null;
   cuisine_locations:
     | { id: string; latitude: number; longitude: number; area: string; is_origin: boolean | null }[]
     | null;
@@ -55,6 +58,9 @@ function mapRow(r: Row): Cuisine {
     originCulture: r.origin_culture ?? undefined,
     authenticity: r.authenticity ?? undefined,
     heritage: r.heritage ?? undefined,
+    whyFamous: r.why_famous ?? undefined,
+    story: r.story ?? undefined,
+    whereToFind: r.where_to_find ?? undefined,
     locations: (r.cuisine_locations ?? []).map(l => ({
       id: l.id,
       latitude: l.latitude,
@@ -77,7 +83,7 @@ export function CuisinesProvider({ children }: { children: ReactNode }) {
       .from('cuisines')
       .select(
         'id,name,description,category,diet,tags,accent,emoji,image,featured,' +
-          'origin_place,origin_culture,authenticity,heritage,' +
+          'origin_place,origin_culture,authenticity,heritage,why_famous,story,where_to_find,' +
           'cuisine_locations(id,latitude,longitude,area,is_origin)',
       )
       .order('featured', { ascending: false })

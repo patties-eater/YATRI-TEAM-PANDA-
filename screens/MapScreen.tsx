@@ -50,6 +50,15 @@ const MAP_HTML = `<!DOCTYPE html>
          box-shadow: 0 3px 6px rgba(0,0,0,.4); overflow: hidden; }
   .pin img { width: 100%; height: 100%; object-fit: cover; display: block;
              transform: rotate(45deg) scale(1.45); }
+  .gloc { position: relative; width: 46px; height: 46px; }
+  .gloc-halo { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px;
+               margin: -23px 0 0 -23px; border-radius: 50%;
+               background: rgba(66,133,244,0.18); animation: glocpulse 1.8s ease-out infinite; }
+  .gloc-dot { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px;
+              margin: -8px 0 0 -8px; border-radius: 50%; background: #4285F4;
+              border: 3px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.45); }
+  @keyframes glocpulse { 0% { transform: scale(.5); opacity: .7; }
+                         100% { transform: scale(1.7); opacity: 0; } }
   .leaflet-control-attribution { font-size: 9px; }
 </style>
 </head>
@@ -81,7 +90,12 @@ const MAP_HTML = `<!DOCTYPE html>
   window.follow = function(lat,lng,z){ map.setView([lat,lng], z||17, { animate:true, duration:0.5 }); };
   window.showUser = function(lat,lng){
     if(userDot){ map.removeLayer(userDot); }
-    userDot = L.circleMarker([lat,lng], { radius:8, weight:3, color:'#fff', fillColor:'#2D6A9F', fillOpacity:1 }).addTo(map);
+    var uicon = L.divIcon({
+      className: '',
+      html: '<div class="gloc"><div class="gloc-halo"></div><div class="gloc-dot"></div></div>',
+      iconSize: [46,46], iconAnchor: [23,23]
+    });
+    userDot = L.marker([lat,lng], { icon: uicon, interactive: false, keyboard: false, zIndexOffset: 1000 }).addTo(map);
   };
   window.drawRoute = function(coords){
     if(routeLine){ map.removeLayer(routeLine); }
@@ -361,7 +375,17 @@ export default function MapScreen() {
       </View>
 
       <TouchableOpacity
-        style={[styles.locateBtn, { bottom: insets.bottom + 24 }]}
+        style={[
+          styles.locateBtn,
+          {
+            bottom:
+              selected && !navigating
+                ? insets.bottom + 210
+                : navigating
+                ? insets.bottom + 96
+                : insets.bottom + 24,
+          },
+        ]}
         onPress={async () => {
           const c = await ensureOrigin();
           if (c) run(`window.showUser(${c.latitude},${c.longitude});window.flyTo(${c.latitude},${c.longitude},15)`);
@@ -369,7 +393,7 @@ export default function MapScreen() {
         }}
         activeOpacity={0.85}
       >
-        <Ionicons name="locate" size={22} color="#2D6A9F" />
+        <Ionicons name="locate" size={24} color="#fff" />
       </TouchableOpacity>
 
       {selected && !navigating && (
@@ -509,14 +533,14 @@ const styles = StyleSheet.create({
   locateBtn: {
     position: 'absolute',
     right: 16,
-    zIndex: 10,
-    width: 46, height: 46,
+    zIndex: 30,
+    width: 54, height: 54,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: colors.primary,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)',
-    shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 }, elevation: 4,
+    borderWidth: 2, borderColor: '#fff',
+    shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 }, elevation: 12,
   },
 
   panel: {
